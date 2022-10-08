@@ -15,7 +15,6 @@ from scipy.sparse import *
 from scipy.sparse.linalg import norm
 from os.path import exists
 
-
 warnings.simplefilter(action='ignore', category=FutureWarning)
 # some stupid pandas function that doesn't work
 
@@ -43,6 +42,9 @@ class utilities:
                     with open('../data/web-Stanford.txt', 'wb') as f_out:
                         f_out.write(f_in.read())
 
+                # delete the zipped file
+                os.remove('../data/web-Stanford.txt.gz')
+
                 dataset = '../data/web-Stanford.txt'
                 print("\nDataset downloaded\n")
 
@@ -63,6 +65,9 @@ class utilities:
                 with gzip.open('../data/web-BerkStan.txt.gz', 'rb') as f_in:
                     with open('../data/web-BerkStan.txt', 'wb') as f_out:
                         f_out.write(f_in.read())
+
+                # delete the zipped file
+                os.remove('../data/web-BerkStan.txt.gz')
 
                 dataset = '../data/web-BerkStan.txt'
                 print("\nDataset downloaded\n")
@@ -143,6 +148,7 @@ class Plotting:
         print("The plot has been saved in the folder data/results/algo1")
 
 class Algorithms:
+
     def algo1(Pt, v, tau, max_mv, a: list):
         start_time = time.time()
 
@@ -184,6 +190,27 @@ class Algorithms:
         print("The algorithm took ", total_time, " seconds to run\n")
 
         return mv, x, r, total_time
+
+    def Arnoldi(A, v, m): #  defined ad algorithm 2 in the paper
+        beta = norm(v)
+        v = v/beta
+        h = sp.sparse.lil_matrix((m,m))
+
+        for j in range(1,m):
+            w = A.dot(v)
+            for i in range(1,j):
+                h[i,j] = v.T.dot(w)
+                w = w - h[i,j]*v
+
+            h[j+i,j] = norm(w)
+
+            if h[j+1,j] == 0:
+                m = j
+                v[m+1] = 0
+                break
+            else:
+                v[j+1] = w/h[j+1,j]
+        return v, h, m, beta, j
 
 # pandas dataframe to store the results
 df = pd.DataFrame(columns=['alpha', 'iterations', 'tau', 'time'])
