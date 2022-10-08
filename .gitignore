@@ -276,4 +276,4 @@ TSWLatexianTemp*
 *.lpz
 
 
-data/
+*.txt
