@@ -10,15 +10,15 @@ import scipy as sp
 import numpy as np
 import pandas as pd
 import networkx as nx
-import plotly.graph_objs as go
+from os.path import exists
 from scipy.sparse import *
 from scipy.sparse.linalg import norm
-from os.path import exists
+import plotly.graph_objs as go
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 # some stupid pandas function that doesn't work
 
-class utilities:
+class Utilities:
     # Importing the dataset
     def load_data():
         # Loading the dataset
@@ -124,8 +124,7 @@ class utilities:
         return a
 
 class Plotting:
-    def tau_over_iterations(dataframe):
-        dataframe = df
+    def tau_over_iterations(df):
         x = df['tau'][::-1].tolist()
         y = df['iterations'].tolist()
 
@@ -154,7 +153,7 @@ class Algorithms:
 
         print("STARTING ALGORITHM 1...")
         u = Pt.dot(v) - v
-        mv = 1 # number of iteration
+        mv = 1 # number of matrix-vector multiplications
         r = sp.sparse.lil_matrix((n,1))
         Res = sp.sparse.lil_matrix((len(a),1))
         x = sp.sparse.lil_matrix((n,1))
@@ -168,7 +167,7 @@ class Algorithms:
                 x = r + v
 
         while max(Res) > tau and mv < max_mv:
-            u = Pt*u # should it be the same u of the beginning?
+            u = Pt*u
             mv += 1
 
             for i in range(len(a)):
@@ -182,7 +181,7 @@ class Algorithms:
         if mv == max_mv:
             print("The algorithm didn't converge in ", max_mv, " iterations")
         else:
-            print("The algorithm converged in ", mv, " iterations")
+            print("The algorithm converged with ", mv, " matrix-vector multiplications executed")
 
         total_time = time.time() - start_time
         total_time = round(total_time, 2)
@@ -217,16 +216,16 @@ df = pd.DataFrame(columns=['alpha', 'iterations', 'tau', 'time'])
 
 # Main
 if __name__ == "__main__":
-    dataset = utilities.load_data()
+    dataset = Utilities.load_data()
     # maximum number of iterations, asked to the user
-    max_mv = int(input("Insert the maximum number of iterations: "))
+    max_mv = int(input("\nInsert the maximum number of iterations: "))
 
-    G, n = utilities.create_graph(dataset)
-    P = utilities.create_matrix(G)
-    d = utilities.dangling_nodes(P,n)
-    v = utilities.probability_vector(n)
-    Pt = utilities.transition_matrix(P, v, d)
-    a = utilities.alpha()
+    G, n = Utilities.create_graph(dataset)
+    P = Utilities.create_matrix(G)
+    d = Utilities.dangling_nodes(P,n)
+    v = Utilities.probability_vector(n)
+    Pt = Utilities.transition_matrix(P, v, d)
+    a = Utilities.alpha()
 
     # run the algorithm for different values of tau from 10^-5 to 10^-9 with step 10^-1
     for i in range(5,10):
@@ -245,4 +244,5 @@ if __name__ == "__main__":
     Plotting.tau_over_time(df)
 
     # print in the terminal the columns of the dataframe iterations, tau and time
+    print("Computations done. Here are the results:")
     print("\n", df[['iterations', 'tau', 'time']])
