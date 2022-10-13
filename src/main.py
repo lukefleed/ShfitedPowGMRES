@@ -221,7 +221,7 @@ df = pd.DataFrame(columns=['alpha', 'products m-v', 'tau', 'time'])
 if __name__ == "__main__":
     dataset = Utilities.load_data()
     # maximum number of iterations, asked to the user
-    max_mv = int(input("\nInsert the maximum number of iterations: "))
+    max_mv = int(input("\nInsert the maximum number of matrix-vector operations: "))
 
     G, n = Utilities.create_graph(dataset)
     P = Utilities.create_matrix(G)
