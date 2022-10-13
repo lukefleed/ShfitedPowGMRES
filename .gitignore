@@ -275,6 +275,4 @@ TSWLatexianTemp*
 # Makeindex log files
 *.lpz
 
-
-*.txt
-sources/istruzioni.md
+data/*.txt
