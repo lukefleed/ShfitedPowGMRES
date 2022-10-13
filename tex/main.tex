@@ -2,6 +2,8 @@
 \usepackage[margin=1in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{fourier}
 \usepackage{amsthm}
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -62,9 +64,10 @@ or, equivalently, as the solution of the linear system
 \begin{equation}\label{eq:pr2}
     (I - \alpha \tilde P)x = (1 - \alpha)v
 \end{equation}
-In the past decade or so, considerable research attention has been devoted to the efficient solution of problems \ref{eq:pr} \ref{eq:pr2}, especially when $n$ is very large. For moderate values of the damping factor, e.g. for $\alpha = 0.85$ as initially suggested by Google for search engine rankings, solution strategies based on the simple Power method have proved to be very effective. However, when $\alpha$ approaches 1, as is required in some applications, the convergence rates of classical stationary iterative methods including the Power method tend to deteriorate sharply, and more robust algorithms need to be used. \\
 
-One area that is largely unexplored in PageRank computations is the efficient solution of problems with the same network structure but multiple damping factors. For example, in the Random Alpha PageRank model used in the design of anti-spam mechanism \cite{Constantine2009Random}, the rankings corresponding to many different damping factors close to 1 need to be computed simultaneously. This problem can be expressed mathematically as solving a sequence of linear systems
+\noindent In the past decade or so, considerable research attention has been devoted to the efficient solution of problems \ref{eq:pr} \ref{eq:pr2}, especially when $n$ is very large. For moderate values of the damping factor, e.g. for $\alpha = 0.85$ as initially suggested by Google for search engine rankings, solution strategies based on the simple Power method have proved to be very effective. However, when $\alpha$ approaches 1, as is required in some applications, the convergence rates of classical stationary iterative methods including the Power method tend to deteriorate sharply, and more robust algorithms need to be used. \vspace*{0.4cm}
+
+\noindent One area that is largely unexplored in PageRank computations is the efficient solution of problems with the same network structure but multiple damping factors. For example, in the Random Alpha PageRank model used in the design of anti-spam mechanism \cite{Constantine2009Random}, the rankings corresponding to many different damping factors close to 1 need to be computed simultaneously. This problem can be expressed mathematically as solving a sequence of linear systems
 \begin{equation}\label{eq:pr3}
     (I - \alpha_i \tilde P)x_i = (1 - \alpha_i)v \quad  \alpha_i \in (0, 1) \quad \forall i \in \{1, 2, ..., s\} S
 \end{equation}
@@ -83,8 +86,9 @@ The Power method is considered one of the algorithms of choice for solving eithe
 \end{equation}
 The convergence behavior is determined mainly by the ratio between the two largest eigenvalues of A. When $\alpha$ gets closer to $1$, though, the convergence can slow down significantly. \\
 
-\noindent As stated in \cite{SHEN2022126799} The number of iterations required to reduce the initial residual down to a tolerance $\tau$, measured as $\tau = \lVert Ax_k - x_k \rVert = \lVert x_{k+1} - x_k \rVert$ can be estimated as $\frac{\log_10 \tau}{\log_10 \alpha}$. For example, when $\tau = 10^{-8}$ the Power method requires about 175 steps to converge for $\alpha = 0.9$ but the iteration count rapidly grows to 1833 for $\alpha = 0.99$. Therefore, for values of the damping parameter very close to 1 more robust alternatives to the simple Power algorithm should be used.
+\noindent As stated in \cite{SHEN2022126799} The number of iterations required to reduce the initial residual down to a tolerance $\tau$, measured as $\tau = \lVert Ax_k - x_k \rVert = \lVert x_{k+1} - x_k \rVert$ can be estimated as $\frac{\log_{10} \tau}{\log_{10} \alpha}$. For example, when $\tau = 10^{-8}$ the Power method requires about 175 steps to converge for $\alpha = 0.9$ but the iteration count rapidly grows to 1833 for $\alpha = 0.99$. Therefore, for values of the damping parameter very close to 1 more robust alternatives to the simple Power algorithm should be used.
 
+\clearpage
 \section{The shifted power method for PageRank computations}
 In this section we consider extensions of stationary iterative methods for the solution of PageRank problems with multiple damping factors. We look in particular at the Power method, the Gauss-Seidel method, and the GIO iteration scheme. We are concerned with how these methods can be executed with the highest efficiency for solving such problems, especially with the question: for each method, whether there exist an implementation such that the computational cost of solving the PageRank problem with multiple damping factor is comparable to that of solving the ordinary PageRank problem with single damping factor.
 
@@ -123,7 +127,7 @@ Since in general each of the $s$ linear systems may require a different number o
         \Ensure $mv,~ x^{(i)},~ r^{(i)} ~ (1 \leq i \leq s)$
         \State Compute $\mu = \tilde P v - v$
         \State Set $mv =1$
-        \For $i = 1:s$
+        \For {$i = 1:s$}
             \State Compute $r^{(i)} = \alpha_i \mu$
             \State Compute $Res(i) = \lVert r^{(i)} \rVert$
             \If {$Res(i) \geq \tau$}
