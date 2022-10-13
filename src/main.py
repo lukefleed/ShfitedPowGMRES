@@ -22,7 +22,7 @@ class Utilities:
     # Importing the dataset
     def load_data():
         # Loading the dataset
-        dataset = int(input("Choose the dataset:\n  [1] web-Stanford\n  [2] web-BerkStan: \nEnter an option: "))
+        dataset = int(input("Choose the dataset:\n  [1] web-Stanford (use this one for now)\n  [2] web-BerkStan: \nEnter an option: "))
 
         if dataset == 1:
             if exists('../data/web-Stanford.txt'):
@@ -82,7 +82,6 @@ class Utilities:
         print("Graph created based on the dataset\n")
         return G, n
 
-    # # Creating the transition probability matrix
     # The matrix is filled with zeros and the (i,j) element is x if the node i is connected to the node j. Where x is 1/(number of nodes connected to i).
     def create_matrix(G):
         print("Creating the transition probability matrix...")
@@ -103,6 +102,7 @@ class Utilities:
         print("List of dangling nodes created\n")
         return d
 
+    # For now it is set to equally distribute the probability to all the nodes
     def probability_vector(n):
         print("Creating the probability vector...")
         v = sp.sparse.lil_matrix((n,1))
@@ -117,22 +117,24 @@ class Utilities:
         print("Transition matrix created\n")
         return Pt
 
+    # it can vary from 0 to 1, the higher the value the more the probability to jump to a random page
     def alpha():
         a = []
         for i in range(85,100):
             a.append(i/100)
         return a
 
+# Class for plotting the results obtained. For now it can only the first algorithm. To be updated once all the algorithms are implemented and the test cases are well defined
 class Plotting:
     def tau_over_iterations(df):
         x = df['tau'][::-1].tolist()
-        y = df['iterations'].tolist()
+        y = df['products m-v'].tolist()
 
         fig = go.Figure(data=go.Scatter(x=x, y=y, mode='lines+markers'),
-                                    layout=go.Layout(title='Iterations needed for the convergence', xaxis_title='tau', yaxis_title='iterations'))
+                                    layout=go.Layout(title='products needed for the convergence', xaxis_title='tau', yaxis_title='products matrix vector'))
 
         # save the figure as a html file
-        fig.write_html("../data/results/algo1/taus_over_iterations.html")
+        fig.write_html("../data/results/algo1/taus_over_prods.html")
         print("The plot has been saved in the folder data/results/algo1")
 
     def tau_over_time(df):
@@ -147,7 +149,7 @@ class Plotting:
         print("The plot has been saved in the folder data/results/algo1")
 
 class Algorithms:
-
+    # Power method adapted to the PageRank problem with different damping factors. Referred as Algorithm 1 in the paper
     def algo1(Pt, v, tau, max_mv, a: list):
         start_time = time.time()
 
@@ -190,7 +192,8 @@ class Algorithms:
 
         return mv, x, r, total_time
 
-    def Arnoldi(A, v, m): #  defined ad algorithm 2 in the paper
+    # Refers to Algorithm 2 in the paper, it's needed to implement the algorithm 4. It doesn't work yet. Refer to the file testing.ipynb for more details. This function down here is just a place holder for now
+    def Arnoldi(A, v, m):
         beta = norm(v)
         v = v/beta
         h = sp.sparse.lil_matrix((m,m))
@@ -212,7 +215,7 @@ class Algorithms:
         return v, h, m, beta, j
 
 # pandas dataframe to store the results
-df = pd.DataFrame(columns=['alpha', 'iterations', 'tau', 'time'])
+df = pd.DataFrame(columns=['alpha', 'products m-v', 'tau', 'time'])
 
 # Main
 if __name__ == "__main__":
@@ -234,7 +237,7 @@ if __name__ == "__main__":
         mv, x, r, total_time = Algorithms.algo1(Pt, v, tau, max_mv, a)
 
         # store the results in the dataframe
-        df = df.append({'alpha': a, 'iterations': mv, 'tau': tau, 'time': total_time}, ignore_index=True)
+        df = df.append({'alpha': a, 'products m-v': mv, 'tau': tau, 'time': total_time}, ignore_index=True)
 
     # save the results in a csv file
     df.to_csv('../data/results/algo1/different_tau.csv', index=False)
@@ -245,4 +248,4 @@ if __name__ == "__main__":
 
     # print in the terminal the columns of the dataframe iterations, tau and time
     print("Computations done. Here are the results:")
-    print("\n", df[['iterations', 'tau', 'time']])
+    print("\n", df[['products m-v', 'tau', 'time']])
