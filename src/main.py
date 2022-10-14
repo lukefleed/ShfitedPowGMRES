@@ -113,7 +113,7 @@ class Utilities:
 
     def transition_matrix(P, v, d):
         print("Creating the transition matrix...")
-        Pt = P + v.dot(d.T)
+        Pt = P + v @ (d.T)
         print("Transition matrix created\n")
         return Pt
 
@@ -154,7 +154,7 @@ class Algorithms:
         start_time = time.time()
 
         print("STARTING ALGORITHM 1...")
-        u = Pt.dot(v) - v
+        u = Pt @ v - v
         mv = 1 # number of matrix-vector multiplications
         r = sp.sparse.lil_matrix((n,1))
         Res = sp.sparse.lil_matrix((len(a),1))
@@ -169,7 +169,7 @@ class Algorithms:
                 x = r + v
 
         while max(Res) > tau and mv < max_mv:
-            u = Pt*u
+            u = Pt @ u
             mv += 1
 
             for i in range(len(a)):
@@ -193,26 +193,28 @@ class Algorithms:
         return mv, x, r, total_time
 
     # Refers to Algorithm 2 in the paper, it's needed to implement the algorithm 4. It doesn't work yet. Refer to the file testing.ipynb for more details. This function down here is just a place holder for now
-    def Arnoldi(A, v, m):
-        beta = norm(v)
-        v = v/beta
-        h = sp.sparse.lil_matrix((m,m))
+def Arnoldi(A, v, m):
+    beta = norm(v)
+    v = v/beta
+    h = sp.sparse.lil_matrix((m,m))
 
-        for j in range(1,m):
-            w = A.dot(v)
-            for i in range(1,j):
-                h[i,j] = v.T.dot(w)
-                w = w - h[i,j]*v
+    for j in range(m):
+        w = A @ v
+        for i in range(j):
+            tmp = v.T @ w
+            h[i,j] = tmp[0,0]
+            w = w - h[i,j]*v
+        h[j,j-1] = norm(w)
 
-            h[j+i,j] = norm(w)
+        if h[j,j-1] == 0:
+            print("Arnoldi breakdown")
+            m = j
+            v = 0
+            break
+        else:
+            v = w/h[j,j-1]
+    return v, h, m, beta, j # this is not the output required in the paper, I should return the matrix V and the matrix H
 
-            if h[j+1,j] == 0:
-                m = j
-                v[m+1] = 0
-                break
-            else:
-                v[j+1] = w/h[j+1,j]
-        return v, h, m, beta, j
 
 # pandas dataframe to store the results
 df = pd.DataFrame(columns=['alpha', 'products m-v', 'tau', 'time'])
