@@ -193,27 +193,26 @@ class Algorithms:
         return mv, x, r, total_time
 
     # Refers to Algorithm 2 in the paper, it's needed to implement the algorithm 4. It doesn't work yet. Refer to the file testing.ipynb for more details. This function down here is just a place holder for now
-def Arnoldi(A, v, m):
-    beta = norm(v)
-    v = v/beta
-    h = sp.sparse.lil_matrix((m,m))
+    def Arnoldi(A, v, m):
+        beta = norm(v)
+        v = v/beta
+        h = sp.sparse.lil_matrix((m,m))
+        for j in range(m):
+            w = A @ v
+            for i in range(j):
+                tmp = v.T @ w
+                h[i,j] = tmp[0,0]
+                w = w - h[i,j]*v
+            h[j,j-1] = norm(w)  # in the paper the index is referred as h[j+1,j] but since python starts from 0 it's h[j,j-1]
 
-    for j in range(m):
-        w = A @ v
-        for i in range(j):
-            tmp = v.T @ w
-            h[i,j] = tmp[0,0]
-            w = w - h[i,j]*v
-        h[j,j-1] = norm(w)
-
-        if h[j,j-1] == 0:
-            print("Arnoldi breakdown")
-            m = j
-            v = 0
-            break
-        else:
-            v = w/h[j,j-1]
-    return v, h, m, beta, j # this is not the output required in the paper, I should return the matrix V and the matrix H
+            if h[j,j-1] == 0:
+                print("Arnoldi breakdown")
+                m = j
+                v = 0
+                break
+            else:
+                v = w/h[j,j-1]
+        return v, h, m, beta, j # this is not the output required in the paper, I should return the matrix V and the matrix H
 
 
 # pandas dataframe to store the results
