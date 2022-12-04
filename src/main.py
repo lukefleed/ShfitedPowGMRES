@@ -193,6 +193,7 @@ class Algorithms:
         return mv, x, r, total_time
 
     # Refers to Algorithm 2 in the paper, it's needed to implement the algorithm 4. It doesn't work yet. Refer to the file testing.ipynb for more details. This function down here is just a place holder for now
+
     def Arnoldi(A, v, m):
         beta = norm(v)
         v = v/beta
