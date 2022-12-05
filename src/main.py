@@ -192,28 +192,52 @@ class Algorithms:
 
         return mv, x, r, total_time
 
-    # Refers to Algorithm 2 in the paper, it's needed to implement the algorithm 4. It doesn't work yet. Refer to the file testing.ipynb for more details. This function down here is just a place holder for now
-
-    def Arnoldi(A, v, m):
+    # Refers to Algorithm 2 in the paper
+    def Arnoldi(A,v0,m):
+        v = v0
         beta = norm(v)
         v = v/beta
-        h = sp.sparse.lil_matrix((m,m))
+        H = sp.sparse.lil_matrix((m+1,m))
+        V = sp.sparse.lil_matrix((A.shape[0],m+1))
+        V[:,0] = v # each column of V is a vector v
+
         for j in range(m):
+            # print("j = ", j)
             w = A @ v
             for i in range(j):
-                tmp = v.T @ w
-                h[i,j] = tmp[0,0]
-                w = w - h[i,j]*v
-            h[j,j-1] = norm(w)  # in the paper the index is referred as h[j+1,j] but since python starts from 0 it's h[j,j-1]
+                tmp = v.T @ w # tmp is a 1x1 matrix, so it's O(1) in memory
+                H[i,j] = tmp[0,0]
+                w = w - H[i,j]*v
 
-            if h[j,j-1] == 0:
+            H[j+1,j] = norm(w)
+
+            if H[j+1,j] == 0:
                 print("Arnoldi breakdown")
                 m = j
                 v = 0
                 break
             else:
-                v = w/h[j,j-1]
-        return v, h, m, beta, j # this is not the output required in the paper, I should return the matrix V and the matrix H
+                if j < m-1:
+                    v = w/H[j+1,j]
+                    V[:,j+1] = v
+
+        print(j, " iterations completed")
+        print("V = ", V.shape)
+        print("H = ", H.shape)
+        print("v = ", v.shape)
+        print("beta = ", beta)
+
+        return V, H, v, beta, j
+
+    def algo4():
+        # TO DO
+        pass
+
+
+
+
+
+
 
 
 # pandas dataframe to store the results
