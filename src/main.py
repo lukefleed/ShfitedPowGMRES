@@ -233,6 +233,20 @@ class Algorithms:
         # TO DO
         pass
 
+class runners:
+    def ShiftedPowerMethod(tau):
+        dataset = Utilities.load_data()
+        max_mv = 100
+        G, n = Utilities.create_graph(dataset)
+        P = Utilities.create_matrix(G)
+        d = Utilities.dangling_nodes(P,n)
+        v = Utilities.probability_vector(n)
+        Pt = Utilities.transition_matrix(P, v, d)
+        a = Utilities.alpha()
+
+        mv, x, r, total_time = Algorithms.algo1(Pt, v, tau, max_mv, a)
+
+        print("total time = ", total_time)
 
 
 
