@@ -52,6 +52,8 @@ def load_data(dataset: Literal["Stanford", "BerkStan"]) -> nx.Graph:
     # create the graph
     print(f"\nCreating the graph of the dataset {dataset}...\n")
     G_dataset = nx.read_edgelist(f"data/Web-{dataset}.txt", create_using=nx.DiGraph(), nodetype=int)
+    print(f"\tNumber of nodes: {G_dataset.number_of_nodes()}")
+    print(f"\tNumber of edges: {G_dataset.number_of_edges()}")
 
     return G_dataset
 
@@ -202,7 +204,7 @@ def pagerank_numpy(G, alpha=0.85, personalization=None, weight="weight", danglin
     norm = largest.sum()
     return dict(zip(G, map(float, largest / norm)))
 
-def pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1.0e-9, nstart=None, weight="weight", dangling=None,):
+def pagerank(G, alpha=0.85, personalization=None, max_iter=200, tol=1.0e-9, nstart=None, weight="weight", dangling=None,):
 
     """
     Returns the PageRank of the nodes in the graph.
@@ -310,15 +312,52 @@ def pagerank(G, alpha=0.85, personalization=None, max_iter=100, tol=1.0e-9, nsta
         # check convergence, l1 norm
         err = np.absolute(x - xlast).sum() # err is the error between the current and previous vectors of PageRank values
         if err < N * tol: # if the error is small enough, stop iterating
-            return dict(zip(nodelist, map(float, x))), iter, alpha, tol # return the current vector of PageRank values
-    raise nx.PowerIterationFailedConvergence(max_iter) # if the error is not small enough, raise an error
+            return dict(zip(nodelist, map(float, x))), iter, tol # return the current vector of PageRank values'
 
-def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=100, tol=1.0e-9):
+    # other wise, return a Null dictionary, the number of iterations, and the tolerance
+    # this is a failure to convergeS
+
+    return {}, iter, tol
+
+def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=200, tol=1.0e-9):
+
+    """
+    Compute the PageRank of each node in the graph G.
+
+    Parameters
+    ----------
+    G : graph
+        A NetworkX graph. Undirected graphs will be converted to a directed graph.
+
+    alphas : list, optional
+        A list of alpha values to use in the shifted power method. The default is [0.85, 0.9, 0.95, 0.99].
+
+    max_iter : integer, optional
+        Maximum number of iterations in power method eigenvalue solver.
+
+    tol : float, optional
+        Error tolerance used to check convergence in power method solver.
+
+    Returns
+    -------
+    pagerank : dictionary
+        Dictionary of nodes with PageRank as value
+
+    mv : integer
+        The number of matrix-vector multiplications used in the power method
+
+    Notes
+    -----
+    The eigenvector calculation uses power iteration with a SciPy sparse matrix representation. The shifted power method is described as Algorithm 1 in the paper located in the sources folders.
+
+    """
 
     N = len(G)
     if N == 0:
         return {}
 
+    # initialize a random sparse matrix of dimension N x len(alphas). The cols of this matrix are the page rank vectors for each alpha.
+    x = sp.sparse.random(N, len(alphas), density=0.01, format="lil", dtype=float)
 
     nodelist = list(G)
     A = nx.to_scipy_sparse_array(G, nodelist=nodelist, dtype=float)
@@ -327,34 +366,30 @@ def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=100, tol=1.
     Q = sp.sparse.csr_array(sp.sparse.spdiags(S.T, 0, *A.shape)) # Q is the matrix of edge weights going into each node
     A = Q
 
-
-    x = np.repeat(1.0 / N, N) # x is the vector of PageRank values
     v = np.repeat(1.0 / N, N) # p is the personalization vector
-
-    mu = A @ v - v # mu is the vector of PageRank values for the random walk with restart
+    mu = A @ v - v
 
     for i in range(len(alphas)):
-        # create a vector r of len(alphas) where r[i] = alpha[i] * mu
-        r = alphas[i] * mu
-        Res = np.linalg.norm(r, 2)
+        r = alphas[i] * mu # residual vector
+        Res = np.linalg.norm(r, 2) # residual norm
 
         if Res >= tol:
-            x = r + v # update x
+            x[:, [i]] = r + v # update the i-th column of x
 
-    iter = 1
+    mv = 0 # number of matrix-vector multiplications
     for _ in range(max_iter):
-        xlast = x
-        iter += 1
-        mu = A @ x - x
+        mv += 1
+        mu = A @ mu
         for i in range(len(alphas)):
-            r = alphas[i]**(iter+1) * mu
-            Res = np.linalg.norm(r, 2)
             if Res >= tol:
-                x = r + x
+                r = pow(alphas[i], mv+1) * mu
+                Res = np.linalg.norm(r,2)
 
-        err = np.absolute(x - xlast).sum() # err is the error between the current and previous vectors of PageRank values
+                if Res >= tol:
+                    x[:, [i]] = r + v
 
-        if err < tol:
-            return dict(zip(nodelist, map(float, x))), iter, alphas, tol
+            err = np.absolute(r).max()
+            if err < tol:
+                 return x, mv, alphas, tol
 
     raise nx.PowerIterationFailedConvergence(max_iter) # if the error is not small enough, raise an error
