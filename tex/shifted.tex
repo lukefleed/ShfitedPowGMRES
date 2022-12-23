@@ -1,0 +1,74 @@
+
+\section{The shifted power method for PageRank computations}
+In this section we'll see the extensions of stationary iterative methods for the solution of PageRank problems with multiple damping factors, as presented in \cite{SHEN2022126799}. We are interested in knowing if, for each method, there exists an implementation such that the computational cost of solving the PageRank problem with multiple damping factor is comparable to that of solving the ordinary PageRank problem with single damping factor.
+
+\subsection{The implementation of the shifted power method}
+Inspired by the reason why shifted Krylov subspaces can save computational cost, the authors of \cite{SHEN2022126799} investigate whether there are duplications in the calculations of multiple linear systems in this problem class by the stationary iterative methods, so that the duplications in the computation can be deleted and used for all systems. It's some sort of dynamic programming approach. Firstly, they analyze the Power method applied to the sequence of linear systems in \ref{eq:pr2}. It computes at the \emph{k-th} iteration approximate solutions $x_k^{(i)} (1 \leq i \leq s)$ of the form
+\begin{equation}
+    x_k^{(i)} = \alpha_i^k \tilde P^k x_k^{(i)} + (1 - \alpha_i^k) \sum_{j=0}^{k-1} \alpha_i^j \tilde P^j v
+\end{equation}
+If the $s$ systems in \ref{eq:pr2} are solved synchronously, this means that all the $x^{(i)}_k$ are computed only after all previous approximations $x^{(j)}_{k-1}$ are available. We can now rearrange the computation efficiently as reported in \cite{SHEN2022126799}:
+\begin{itemize}
+    \item at the first iterations
+        \begin{itemize}
+            \item compute and store $\mu_1 = \tilde P x_0$ and $\mu_2 = v$;
+            \item compute and store $x_1^{(i)} = \alpha_i \mu_1 + (1-\alpha_i)\mu_2;$
+        \end{itemize}
+    \item at any other subsequent iteration $k>1$
+        \begin{itemize}
+            \item compute and store $ x_k^{(i)} := (1-\alpha_i)\sum_{j=0}^{k-2} \alpha_i^j \tilde P^j v= x_{k-1}^{(i)} - \alpha_i^{k-1} \mu_1$;
+            \item compute and store $\mu_1 = \tilde P \mu_1$ and $\mu_2 = \tilde P \mu_2$;
+            \item compute and store $x_k^{(i)} = \alpha_i \mu_1 + x_k^{(i)} + (1-\alpha_i)\alpha^{k-1}_i \mu_2$.
+        \end{itemize}
+\end{itemize}
+This implementation requires at most $2$ matrix-vector products at each step, which is a significant gain compared to the $s$ matrix-vector products required by the standard Power method to compute $x^{(i)}_{k+1}$ , especially when $s \gg 2$. \vspace{0.4cm}
+
+\noindent This was of course still a theoretical explanation. An efficient implementation can be written to compute and store $\mu = \tilde Pv -v$ at the first iteration and then store
+$$\mu = \tilde P^{k-1}(\tilde P v - v) = \tilde P \cdot (\tilde P^{k-2}(\tilde P v - v))$$
+at each \emph{k-th} iteration ($k  > 1$), and then from each approximate solution as $x_k^{(i)} = \alpha_i^k \mu + x_{k-1}^{(i)}$. The residual vector $r_k^{(i)}$ associated with the approximate solution $x_k^{(i)}$ has the following expression
+\begin{equation}
+    r_k^{(i)} = A x_k^{(i)} - x_k^{(i)} = x_{k+1}^{(i)} - x_k^{(i)} = \alpha_i^{k+1} \tilde P^k (\tilde P v - v)
+\end{equation}
+Since in general each of the $s$ linear systems may require a different number of Power iterations to converge, the $s$ residual norms have to be monitored separately to test the convergence. \vspace{0.4cm}
+
+\noindent Now we can summarize the efficient implementation of the Power method presented in this section for solving problem \ref{eq:pr2} in Algorithm \ref{alg:algo1}, as reported in \cite{SHEN2022126799}. From now on, we'll refer to this implementation as the \emph{Shifted-Power method}.
+
+\begin{algorithm}\label{alg:algo1}
+    \caption{Shifted-Power method for PageRank with multiple damping factors}\label{alg:algo1}
+    \begin{algorithmic}
+        \Require $\tilde P, ~v, ~\tau, ~\max_{mv}, ~\alpha_i ~ (1 \leq i \leq s)$
+        \Ensure $mv,~ x^{(i)},~ r^{(i)} ~ (1 \leq i \leq s)$
+        \State Compute $\mu = \tilde P v - v$
+        \State Set $mv =1$
+        \For {$i = 1:s$}
+            \State Compute $r^{(i)} = \alpha_i \mu$
+            \State Compute $Res(i) = \lVert r^{(i)} \rVert$
+            \If {$Res(i) \geq \tau$}
+                \State Compute $x^{(i)} = r^{(i)} + v$
+            \EndIf
+        \EndFor
+
+        \While {$\max(Res \geq \tau)$ and $ mv \leq \max_{mv}$}
+            \State compute $\mu = \tilde P \mu$
+            \State $mv = mv + 1$
+            \For {$i = 1:s$}
+                \If {$Res(i) \geq \tau$}
+                    \State Compute $r^{(i)} = \alpha_i^{k+1} \mu$
+                    \State Compute $Res(i) = \lVert r^{(i)} \rVert$
+                    \If {$Res(i) \geq \tau$}
+                        \State Compute $x^{(i)} = r^{(i)} + x^{(i)}$
+                    \EndIf
+                \EndIf
+            \EndFor
+        \EndWhile
+    \end{algorithmic}
+\end{algorithm}
+
+\noindent Where $mv$ is an integer that counts the number of matrix-vector products performed by the algorithm. The algorithm stops when either all the residual norms are smaller than the tolerance $\tau$ or the maximum number of matrix-vector products is reached. An implementation of this algorithm written in Python is available in the github repository  of this project.
+
+
+
+
+
+
+\clearpage

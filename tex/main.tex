@@ -1,5 +1,5 @@
-\documentclass[12pt]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[11pt]{article}
+\usepackage[margin=1.2in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage[T1]{fontenc}
@@ -17,6 +17,21 @@
 \usepackage{lipsum}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{mathtools}
+\usepackage{nccmath}
+\usepackage[most]{tcolorbox}
+\newtcolorbox[auto counter]{problem}[1][]{%
+    enhanced,
+    breakable,
+    colback=white,
+    colbacktitle=white,
+    coltitle=black,
+    fonttitle=\bfseries,
+    boxrule=.6pt,
+    titlerule=.2pt,
+    toptitle=3pt,
+    bottomtitle=3pt,
+    title=GitHub repository of this project}
 
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\N}{\mathbb{N}}
@@ -42,153 +57,16 @@ for solving PageRank with multiple damping factors}
 \tableofcontents
 \clearpage
 
-\section{Introduction}
-
-The PageRank model was proposed by Google in a series of papers to evaluate accurately the most important web-pages from the World Wide Web matching a set of keywords entered by a user. For search engine rankings, the importance of web-pages is computed from the stationary probability vector of the random process of a web surfer who keeps visiting a large set of web-pages connected by hyperlinks. The link structure of the World Wide Web is represented by a directed graph, the so-called web link graph, and its corresponding adjacency matrix $G \in \N^{n \times n}$ where $n$ denotes the number of pages and $G_{ij}$ is nonzero (being 1) only if the \emph{jth} page has a hyperlink pointing to the \emph{ith} page. The transition probability matrix $P \in \R^{n \times n}$ of the random process has entries as described in \ref{eq:transition}.
-
-\begin{equation}\label{eq:transition}
-    P(i,j) =
-    \begin{cases}
-        \displaystyle \frac{1}{\sum_{k=1}^n G_{kj}} & \text{if } G_{i,j} = 0 \\
-        0 & \text{otherwise}
-    \end{cases}
-\end{equation}
-
-\noindent The entire random process needs a unique stationary distribution. To ensure this propriety is satisfied , the transition matrix $P$ is usually modified to be an irreducible stochastic matrix $A$ (called the Google matrix) as follows:
-
-% \noindent To ensure that the random process has a unique stationary distribution and it will not stagnate, the transition matrix P is usually modified to be an irreducible stochastic matrix $A$ (called the Google matrix) as follows
-
-\begin{equation}\label{eq:google}
-    A = \alpha \tilde P + (1 - \alpha)v e^T
-\end{equation}
-
-\noindent In \ref{eq:google} we have defines a new matrix called $\tilde P = P + vd^T$ where $d \in N^{n \times 1}$ is a binary vector tracing the indices of the damping web pages with no hyperlinks, i.e., $d(i) = 1$ if the \emph{i-th} page ha no hyperlink, $v \in \R^{n \times n}$ is a probability vector, $e = [1, 1, ... ,1]^T$ and $0<\alpha<1$, the so-called damping factor that represents the probability in the model that the surfer transfer by clicking a hyperlink rather than other ways. Mathematically, the PageRank model can be formulated as the problem of finding the positive unit eigenvector $x$ (the so-called PageRank vector) such that
-\begin{equation}\label{eq:pr}
-    Ax = x, \quad \lVert x \rVert = 1, \quad x > 0
-\end{equation}
-or, equivalently, as the solution of the linear system
-\begin{equation}\label{eq:pr2}
-    (I - \alpha \tilde P)x = (1 - \alpha)v
-\end{equation}
-
-\noindent The authors of the paper \cite{SHEN2022126799} emphasize how in the in the past decade or so, considerable research attention has been devoted to the efficient solution of problems \ref{eq:pr} \ref{eq:pr2}, especially when $n$ is very large. For moderate values of the damping factor, e.g. for $\alpha = 0.85$ as initially suggested by Google for search engine rankings, solution strategies based on the simple Power method have proved to be very effective. However, when $\alpha$ approaches 1, as is required in some applications, the convergence rates of classical stationary iterative methods including the Power method tend to deteriorate sharply, and more robust algorithms need to be used. \vspace*{0.4cm}
-
-\noindent In the reference paper that we are using for this project, the authors focus their attention in the area of PageRank computations with the same network structure but multiple damping factors. For example, in the Random Alpha PageRank model used in the design of anti-spam mechanism \cite{Constantine2009Random}, the rankings corresponding to many different damping factors close to 1 need to be computed simultaneously. They explain that the problem can be expressed mathematically as solving a sequence of linear systems
-\begin{equation}\label{eq:pr3}
-    (I - \alpha_i \tilde P)x_i = (1 - \alpha_i)v \quad  \alpha_i \in (0, 1) \quad \forall i \in \{1, 2, ..., s\}
-\end{equation}
-As we know, standard PageRank algorithms applied to \ref{eq:pr3} would solve the $s$ linear systems independently. Although these solutions can be performed in parallel, the process would still demand large computational resources for high dimension problems.
-This consideration motived the authors to search novel methods with reduced algorithmic and memory complexity, to afford the solution of larger problems on moderate computing resources. They suggest to write the PageRank problem with multiple damping factors given at once \ref{eq:pr3} as a sequence of shifted linear systems of the form:
-\begin{equation}
-    (\frac{1}{\alpha_i}I - \tilde P)x^{(i)} = \frac{1 - \alpha_i}{\alpha_i}v \quad \forall i \in \{1, 2, ..., s\} \quad 0 < \alpha_i < 1
-\end{equation}
-We know from literature that the Shifted Krylov methods may still suffer from slow convergence when the damping factor approaches 1, requiring larger search spaces to converge with satisfactory speed. In \cite{SHEN2022126799} is suggest that, to overcome this problem, we can combine stationary iterative methods and shifted Krylov subspace methods. They derive an implementation of the Power method that solves the PageRank problem with multiple dumpling factors at almost the same computational time of the standard Power method for solving one single system. They also demonstrate that this shifted Power method generates collinear residual vectors. Based on this result, they use the shifted Power iterations to provide smooth initial solutions for running shifted Krylov subspace methods such as \texttt{GMRES}. Besides, they discuss how to apply seed system choosing strategy and extrapolation techniques to further speed up the iterative process.
-
-% As an attempt of a possible remedy in this situation, we present a framework that combines. shifted stationary iterative methods and shifted Krylov subspace methods. In detail, we derive the implementation of the Power method that solves the PageRank problem with multiple damping factors at almost the same computational cost of the standard Power method for solving one single system. Furthermore, we demonstrate that this shifted Power method generates collinear residual vectors. Based on this result, we use the shifted Power iterations to provide smooth initial solutions for running shifted Krylov subspace methods such as GMRES. Besides, we discuss how to apply seed system choosing strategy and extrapolation techniques to further speed up the iterative process.
-
-\subsection{Overview of the classical PageRank problem}
-The Power method is considered one of the algorithms of choice for solving either the eigenvalue \ref{eq:pr} or the linear system \ref{eq:pr2} formulation of the PageRank problem, as it was originally used by Google. Power iterations write as
-\begin{equation}\label{eq:power}
-    x_{(k+1)} = Ax_k =\alpha \tilde P x_{(k)} + (1 - \alpha)v
-\end{equation}
-The convergence behavior is determined mainly by the ratio between the two largest eigenvalues of A. When $\alpha$ gets closer to $1$, though, the convergence can slow down significantly. \\
-
-\noindent As stated in \cite{SHEN2022126799} The number of iterations required to reduce the initial residual down to a tolerance $\tau$, measured as $\tau = \lVert Ax_k - x_k \rVert = \lVert x_{k+1} - x_k \rVert$ can be estimated as $\frac{\log_{10} \tau}{\log_{10} \alpha}$. The authors provide an example: when $\tau = 10^{-8}$ the Power method requires about 175 steps to converge for $\alpha = 0.9$ but the iteration count rapidly grows to 1833 for $\alpha = 0.99$. Therefore, for values of the damping parameter very close to 1 more robust alternatives to the simple Power algorithm should be used.
-
-\clearpage
-\section{The shifted power method for PageRank computations}
-In this section presents the extensions of stationary iterative methods for the solution of PageRank problems with multiple damping factors, as presented in \cite{SHEN2022126799}. We are interested in knowing if, for each method, there exists an implementation such that the computational cost of solving the PageRank problem with multiple damping factor is comparable to that of solving the ordinary PageRank problem with single damping factor.
-
-\subsection{The implementation of the shifted power method}
-Inspired by the reason why shifted Krylov subspaces can save computational cost, the authors of \cite{SHEN2022126799} investigate whether there are duplications in the calculations of multiple linear systems in this problem class by the stationary iterative methods, so that the duplications in the computation can be deleted and used for all systems. It's some sort of dynamic programming approach. Firstly, they analyze the Power method applied to the sequence of linear systems in \ref{eq:pr2}. It computes at the \emph{i-th} iteration approximate solutions $x_k (i) (1 \leq i \leq s)$ of the form
-\begin{equation}
-    \alpha_i^k \tilde P^k x_k^{(i)} + (1 - \alpha_i^k) \sum_{j=0}^{k-1} \alpha_i^j \tilde P^j v
-\end{equation}
-If the $s$ systems in \ref{eq:pr2} are solved synchronously, that is all $x^{(i)}_k$ are computed only after all previous approximations $x^{(j)}_{k-1}$ are available, then the computation can be rearranged efficiently as follows:
-\begin{itemize}
-    \item at the first iterations
-        \begin{itemize}
-            \item compute and store $\mu_1 = \tilde P x_0$ and $\mu_2 = v$;
-            \item compute and store $x_1^{(i)} = \alpha_i \mu_1 + (1-\alpha_i)\mu_2;$
-        \end{itemize}
-    \item at any other subsequent iteration $k>1$
-        \begin{itemize}
-            \item compute and store $x_k^(i) := (1-\alpha_i)\sum_{j=0}^{k-2} \alpha_i^j \tilde P^j v= x_{k-1}^{(i)} - \alpha_i^{k-1} \mu_1$;
-            \item compute and store $\mu_1 = \tilde P \mu_1$ and $\mu_2 = \tilde P \mu_2$;
-            \item compute and store $x_k^{(i)} = \alpha_i \mu_1 + x_k^{(i)} + (1-\alpha_i)\alpha^{k-1}_i \mu_2$.
-        \end{itemize}
-\end{itemize}
-This implementation requires at most $2$ matrix-vector products at each step, which is a significant gain compared to the $s$ matrix-vector products required by the standard Power method to compute $x^{(i)}_{k+1}$ , especially when $s \gg 2$. \vspace{0.4cm}
-
-\noindent An efficient implementation can compute and store $\mu = \tilde Pv -v$ at the first iteration and store
-$$\mu = \tilde P^{k-1}(\tilde P v - v) = \tilde P \cdot (\tilde P^{k-2}(\tilde P v - v))$$
-At each \emph{k-th} iteration ($k  > 1$), and finally from each approximate solution as $x_k^{(i)} = \alpha_i^k \mu + x_{k-1}^{(i)}$. The residual vector $r_k^{(i)}$ associated with the approximate solution $x_k^{(i)}$ has the following expression
-\begin{equation}
-    r_k^{(i)} = A x_k^{(i)} - x_k^{(i)} = x_{k+1}^{(i)} - x_k^{(i)} = \alpha_i^{k+1} \tilde P^k (\tilde P v - v)
-\end{equation}
-Since in general each of the $s$ linear systems may require a different number of Power iterations to converge, the $s$ residual norms have to be monitored separately to test the convergence. \vspace{0.4cm}
-
-\noindent Now we can summarize the efficient implementation of the Power method presented in this section for solving problem \ref{eq:pr2} in Algorithm \ref{alg:algo1}, and we call it the shifted Power method hereafter.
-
-\begin{algorithm}\label{alg:algo1}
-    \caption{Shifted-Power method for PageRank with multiple damping factors}\label{alg:algo1}
-    \begin{algorithmic}
-        \Require $\tilde P, ~v, ~\tau, ~\max_{mv}, ~\alpha_i ~ (1 \leq i \leq s)$
-        \Ensure $mv,~ x^{(i)},~ r^{(i)} ~ (1 \leq i \leq s)$
-        \State Compute $\mu = \tilde P v - v$
-        \State Set $mv =1$
-        \For {$i = 1:s$}
-            \State Compute $r^{(i)} = \alpha_i \mu$
-            \State Compute $Res(i) = \lVert r^{(i)} \rVert$
-            \If {$Res(i) \geq \tau$}
-                \State Compute $x^{(i)} = r^{(i)} + v$
-            \EndIf
-        \EndFor
-
-        \While {$\max(Res \geq \tau)$ and $ mv \leq \max_{mv}$}
-            \State compute $\mu = \tilde P \mu$
-            \State $mv = mv + 1$
-            \For {$i = 1:s$}
-                \If {$Res(i) \geq \tau$}
-                    \State Compute $r^{(i)} = \alpha_i^{k+1} \mu$
-                    \State Compute $Res(i) = \lVert r^{(i)} \rVert$
-                    \If {$Res(i) \geq \tau$}
-                        \State Compute $x^{(i)} = r^{(i)} + x^{(i)}$
-                    \EndIf
-                \EndIf
-            \EndFor
-        \EndWhile
-    \end{algorithmic}
-\end{algorithm}
-
-\noindent Where $mv$ is an integer that counts the number of matrix-vector products performed by the algorithm. The algorithm stops when either all the residual norms are smaller than the tolerance $\tau$ or the maximum number of matrix-vector products is reached. An implementation of this algorithm written in Python is available in the github repository \cite{ShfitedPowGMRES} of this project.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+\include{intro.tex}
+\include{shifted.tex}
+\include{shift_GMRES.tex}
+\include{num.tex}
 
 \clearpage
 \bibliographystyle{unsrt}
 \bibliography{ref}
 \nocite{*}
+
+
+
 \end{document}

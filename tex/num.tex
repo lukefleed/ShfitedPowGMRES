@@ -1,0 +1,81 @@
+
+\section{Numerical experiments}\label{sec:exp}
+
+In this experiment, we test the performance of the shifted Power method against the conventional Power method for solving PageRank problems with multiple damping factors, namely $\{ \alpha_1 = 0.85, ~\alpha_2 = 0.86, ~...~ ,~ \alpha_{15} = 0.99 \}$ on the \texttt{web-stanford} and \texttt{web-BerkStan} datasets. The \texttt{web-stanford} dataset is a directed graph with $|V| = 281,903$ nodes and $|E| = 1,810,314$ edges, and the \texttt{web-BerkStan} dataset is a directed graph with $|V| = 1, 013, 320$ nodes and $|E| = 5, 308, 054$ edges. The datasets are available at \url{http://snap.stanford.edu/data/web-Stanford.html} and \url{http://snap.stanford.edu/data/web-BerkStan.html} respectively. The datasets are stored in the \texttt{.txt} edge-list format. The characteristics of the datasets are summarized in Table \ref{tab:datasets}.
+
+% create a table with cols: Name, Number of Nodes, Number of edges, Density, Average Number of zeros (per row)
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Dataset} & \textbf{Nodes} & \textbf{Edges} & \textbf{Density} \\ \hline
+\texttt{web-Stanford} & $281,903$ & $2,312,497$ & $2.9099 \times 10^{-5}$ \\ \hline
+\texttt{web-BerkStan} & $685,230$ & $7,600,595$ & $1.6187 \times 10^{-5}$ \\ \hline
+\end{tabular}
+\caption{Summary of the datasets used in the experiments.}
+\label{tab:datasets}
+\end{table}
+
+\noindent The personalization vector $v$ has been set to $v = [1, 1, ... , 1]^T/n$. All the experiments are run in Python 3.10 on a 64-bit Arch Linux machine with an AMD Ryzen™ 5 2600 Processor and 16 GB of RAM.
+
+\subsection{Technical details}
+
+\begin{problem}
+    \centering
+    \url{https://github.com/lukefleed/ShfitedPowGMRES}
+\end{problem}
+
+\noindent In the project github repository  we can find an \texttt{algo.py} file where all the functions used in the experiments are implemented. The \texttt{algo.py} file contains the following functions:
+
+\paragraph{load\_data} This function loads the datasets from the \texttt{.txt} edge-list format and returns a networkx graph object. It takes as input a literal, the options are \texttt{web-stanford} and \texttt{web-BerkStan}.
+
+\paragraph{pagerank} This function computes the PageRank vector of a given graph. It takes as input the following parameters:
+    \begin{itemize}
+        \item \texttt{G:} a networkx graph object.
+        \item \texttt{alpha:} Damping parameter for PageRank, default=$0.85$.
+        \item \texttt{personalization:} The "personalization vector" consisting of a dictionary with a key some subset of graph nodes and personalization value each of those. At least one personalization value must be non-zero. If not specified, a nodes personalization value will $1/N$ where $N$ is the number of nodes in \texttt{G}.
+        \item \texttt{max\_iter:} The maximum number of iterations in power method eigenvalue solver. Default is $200$.
+        \item \texttt{nstart:} Starting value of PageRank iteration for each node. Default is $None$.
+        \item \texttt{tol:} Error tolerance used to check convergence in power method solver. Default is $10^{-6}$.
+        \item \texttt{weight:} Edge data key corresponding to the edge weight. If None, then uniform weights are assumed. Default is $None$.
+        \item \texttt{dangling:} The outedges to be assigned to any "dangling" nodes, i.e., nodes without any outedges. The dict key is the node the outedge points to and the dict value is the weight of that outedge. By default, dangling nodes are given outedges according to the personalization vector (uniform if not specified).
+    \end{itemize}
+This function is strongly based on the \texttt{pagerank\_scipy} function of the networkx library.
+
+\paragraph{shifted\_pow\_pagerank}: This is the implementation of the algorithm \ref{alg:algo1} with the difference that I am using the $l1$ norm since the $l2$ norm is still not implemented for sparse matrices in SciPy.
+
+\vspace{0.5cm}
+
+\noindent There are is also another function called \texttt{pagerank\_numpy}. The eigenvector calculation uses NumPy's interface to the \texttt{LAPACK} eigenvalue solvers. This will be the fastest and most accurate for small graphs. Unfortunately, the eigenvector calculation is not stable for large graphs. Therefore, the \texttt{pagerank\_numpy} function is not used in the experiments.
+
+\subsection{Convergence results for the Shifted Power method}
+
+In the PageRank formulation with multiple damping factors, the iterative solution of each $i-th$ linear system is started from the initial guess $x_0^{(i)} = v$ and it's stopped when either the solution $x_k^{(i)}$ satisfies
+\begin{equation*}
+    \frac{\lVert (1 - \alpha_i)v - (I - \alpha_i \tilde P x_k^{(i)} \rVert_2}{\lVert x_k^{(i)} \rVert_2} < 10^{-6}
+\end{equation*}
+or the number of matrix-vector products exceeds $200$. \vspace*{0.5cm}
+
+\noindent In this experiment we test the performance of the shifted Power method against the conventional Power method for solving PageRank problems with multiple damping factors.
+
+% create a table to store the results on each dataset for the two methods. We are interest in the mv and cpu time
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Dataset} & \textbf{Method} & \textbf{CPU Time (s)} & \textbf{mv} \\ \hline
+\texttt{web-Stanford} & \texttt{Power} & $71.7$ & $70$  \\ \hline
+\texttt{web-Stanford} & \texttt{Shifted Power} & $665.4$ & $56$ \\ \hline
+
+\hline
+
+\texttt{web-BerkStan} & \texttt{Power} & $202.1$ & $49$  \\ \hline
+\texttt{web-BerkStan} & \texttt{Shifted Power} & $1342.9$ & $73$ \\ \hline
+\end{tabular}
+\caption{Summary of the experiments.}
+\label{tab:results}
+\end{table}
+
+\noindent The results presented on table \ref{tab:results} are a bit in contrast compared to what the paper \cite{SHEN2022126799} reports. In their experiment the CPU time of the shifted power method is lower then the one of the standard power method. However, in our experiments the CPU time of the shifted power method is far higher then the one of the standard power method. Furthermore, theoretically, the number of matrix-vector products should be lower for the shifted power method, in particular it should be equal to the one of the standard PageRank algorithm with the biggest damping factor. However, in our experiments the number of matrix-vector products is higher for the shifted power method for the dataset \texttt{web-BerkStan} and lower for the dataset \texttt{web-Stanford}. \vspace*{0.5cm}
+
+\noindent The reasons to those differences in results may be a lot. I think that the most plausible reason is the difference in programming language and implementation, combined with a possibility of misunderstanding of the pseudo-code presented in \cite{SHEN2022126799}. My standard PageRank function is a slightly modified version of the network library function \texttt{pagerank\_scipy}, so I suppose that is better optimized in comparison to the shifted power method implementation that I wrote. Also, the network \texttt{Web-BerkStan} is very different from the \texttt{web-stanford} one. The adjacency matrix relative to the first one, has a lot of rows full of zeros in comparison to the second one ($4744$ vs $172$). This might effect negatively the shifted power method for this specific cases of networks with a lot of dangling nodes. \vspace*{0.5cm}

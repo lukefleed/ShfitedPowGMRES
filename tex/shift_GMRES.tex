@@ -1,0 +1,75 @@
+\clearpage
+\section{Shifted power-GMRES method}
+
+In this section we'll cover the approach that the authors in \cite{SHEN2022126799} used to combine the shifted power method with the fast shifted \texttt{GMRES} method to create an hybrid algorithm for solving complex PageRank problems with multiple damping factors.
+
+\subsection{Restarted GMRES method}
+
+The Restarted GMRES method (hereafter referred to as GMRES in short) is a non-symmetric Krylov subspace solver based on the Arnoldi decomposition procedure, that the authors sketch in the following algorithm
+
+\begin{algorithm}[H]
+\caption{Arnoldi}
+\label{alg:arnoldi}
+\begin{algorithmic}[1]
+    \Require $A, v_0, m$
+    \Ensure $V_m, H_m, v_{m+1}, h_{m+1,m}, \beta, j$
+    \State Compute $\beta = \lVert v_0 \rVert$
+    \State $v_1 = v_0/ \beta$
+    \For {$j = 1:m$} 
+        \State Compute $w = Av_j$
+        \For {$i = 1:j$} 
+            \State Compute $h_{i,j} = v_i^T w$
+            \State Compute $w = w - h_{i,j} v_i$
+        \EndFor
+        \State $h_{j+1,j} = \lVert w_i \rVert$
+        \If {$h_{j+1,j} = 0$} 
+            \State $m = j$, 
+            \State $v_{m+1} = 0$
+            \State \textbf{break}
+        \Else
+            \State $v_{j+1} = w / h_{j+1,j}$
+        \EndIf
+    \EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\noindent Where $A \in \R^{n\times n}$ and $v_0 \in \R ^{n \times 1}$ is the initial vector. After $m$ iterations, the Arnoldi procedure produces the orthogonal basis $V_m = [v_1, \dots, v_m]$ and the upper Hessenberg matrix $H_m \in \R^{m\times m}$, and the residual vector $v_{m+1} \in \R^{n \times 1}$ and the residual norm $h_{m+1,m} \in \R$. Starting from $v_0 = b - Ax_0$ with an initial guess $x_0$, after running $m$ steps of the algorithm \ref{alg:arnoldi}, the \texttt{GMRES} method produces the approximate solution $\tilde x$ of the linear system $Ax = b$ that minimizes the residual norm $\lVert b - Ax \rVert$ in the Krylov subspace of dimension $m$. \vspace*{0.4cm}
+
+\noindent We know that the accuracy of the approximate solution $\tilde x$ of \texttt{GMRES} depends heavily on the dimension $m$ of the search space. The authors in \cite{SHEN2022126799} propose to use the \texttt{GMRES} method as a preconditioner for the shifted power method presented in the previous section. The core idea of the method is to run standard GMRES on a seed system and to approximate the other solutions as by products. The theoretical basis is the shift-invariance property of the Krylov subspace that enables us to use only one Krylov subspace for all the shifted systems, provided that the residual vectors are collinear to one other. The algorithm proposed by the authors is presented in Algorithm \ref{alg:shifted_GMRES}.
+
+\begin{algorithm}[H]
+\caption{Shifted GMRES}
+\label{alg:shifted_GMRES}
+\begin{algorithmic}[1]
+    \Require $\tilde P, v, m, \alpha_i, maxit, x_0^i ~~ (1 \leq i \leq s)$
+    \Ensure $x^i, res_i ~~(1 \leq i \leq s), mv$
+    \State Set $_0^i = \frac{1-\alpha_i}{\alpha_i} v - \Big(\frac{1}{\alpha_i} I - \tilde P \Big) x_0^i$, iter = 1
+    \State Set $res_i = \alpha_i \lVert v \rVert ~~ (1 \leq i \leq s)$
+    \State Set mv = 0
+    \While {$\max (res_i) \geq \tau~~ \&\& ~~ iter \leq maxit$}
+        \State Find $k$ that satisfies $res_k = \max (res_i)$
+        \State Compute $\gamma^i = \frac{res_i \alpha_k}{res_k \alpha_i}$ for all $i \neq k$
+        \State Run Arnoldi by $ [V_m, \bar H_m^k, v_{m+1}, \bar h_{m+1,m}, \beta, j] = Arnoldi(\frac{1}{\alpha_k}I - \tilde P, r_0^k, m)$
+        \State Set $mv = mv + j$
+        \State Compute $y_k$, the minimizer of $\lVert \beta e_1 - \bar H_m^k y_k \rVert_2$
+        \State Compute $x^k = x_0^k + V_m y_k$
+        \State Compute $res_k = \alpha_k \lVert \beta e_1 - \bar H_m^k y^k \rVert$
+        \For {i = 1, 2, \dots , k-1, k+1, \dots , s}
+            \If {$res_i \geq \tau$} 
+                \State Set $\bar H_m^i = \bar H_m^k + \Big( \frac{1-\alpha_i}{\alpha_i} - \frac{1-\alpha_k}{\alpha_k} \Big) I_m$
+                \State Solve $y_i$ and $\gamma_i$ from $\begin{bmatrix} \bar H_m^i & z \end{bmatrix} \begin{bmatrix} y^i \\ \gamma^i \end{bmatrix} = \gamma^i \beta e_1$
+                \State Set $x^i = x_0^i + V_m y^i$
+                \State Set $res_i = \frac{\alpha_i}{\alpha_k} \gamma_k^i res_k$
+            \EndIf
+        \EndFor
+        \State Set $iter = iter + 1$
+        \State Set $x_0^i = x^i$
+    \EndWhile
+\end{algorithmic}
+\end{algorithm}
+
+\noindent Where $z = \beta e_1 - H_m^1 y_m^1$. In line 15, by solving this small size system, we can obtain the vector $y_m^i$ and scalar $\gamma_m^i$ that ensures the collinearity of the shifted results.
+
+\paragraph{Problems:} The implementation of this algorithm has been very problematic. The key of this algorithm is the use of the \emph{seed choosing strategy} described in \cite{SHEN2022126799}. However, during my tests, after the second iteration, the $k$ value remains the same and the $res$ vector does not change. This leads obviously to a stall situation, where the program runs without updating the values until it reaches the maximum number of iterations allowed. This problem is still under investigation. I have provided anyway a notebook in the github repository with the code of the algorithm for completeness, even if it's still not working. I think that the problem is related to some misunderstanding of the algorithm provided in the pseudo-code, but I have not been able to find it yet. For this reason, there won't be any tests results for this algorithm in the following section.
+
+
