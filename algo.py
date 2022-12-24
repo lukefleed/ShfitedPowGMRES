@@ -420,7 +420,7 @@ def pagerank(G, alpha=0.85, personalization=None, max_iter=10000, tol=1.0e-9, ns
         x = alpha * (x @ A + sum(x[is_dangling]) * dangling_weights) + (1 - alpha) * p # x is the current vector of PageRank values
         # check convergence, l1 norm
         err = np.absolute(x - xlast).sum() # err is the error between the current and previous vectors of PageRank values
-        print("Iteration: ", _, "\r", end="")
+        # print("Iteration: ", _, "\r", end="")
 
         if err < N * tol: # if the error is small enough, stop iterating
             return dict(zip(nodelist, map(float, x))), iter, tol # return the current vector of PageRank values'
@@ -508,8 +508,7 @@ def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=
             print("Convergence reached with, ", mv, " matrix-vector multiplications")
             return x, mv, alphas, tol
 
-        print("Iteration: ", _, "\r", end="")
-
+        # print("Iteration: ", _, "\r", end="")
 
         mu = A @ mu
         mv += 1

@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore")
 # df = pd.DataFrame(columns=["method" "alpha", "cpu_time", "mv", "tol"])
 
 def run_standard_pagerank(G, alphas):
-    print("\nStarting the standard pagerank algorithm...\n")
+    print("\nStarting the standard pagerank algorithm...")
 
     iter_dict = dict.fromkeys(alphas, 0)
     list_of_pageranks = []
@@ -24,10 +24,10 @@ def run_standard_pagerank(G, alphas):
     cpu_time = round(end1 - start1,1)
     mv = total_iter
 
-    print("\nSTANDARD PAGERANK ALGORITHM\n")
+    print("\nSTANDARD PAGERANK ALGORITHM RESULTS:\n")
     print("\tCPU time (s):", cpu_time)
     print("\tMatrix-vector multiplications:", mv)
-    print("\tAlpha:", alphas)
+    print("\tAlpha(s):", alphas)
     print("\tTolerance:", tol)
 
     for i in range(len(list_of_pageranks)):
@@ -41,17 +41,17 @@ def run_standard_pagerank(G, alphas):
 
 
 def run_shifted_powe(G, alphas):
-    print("\nStarting the SHIFTED PAGERANK ALGORITHM...\n")
+    print("\nStarting the shifted power method... (this may take a while)")
 
     start2 = time.time()
     x, mv, alphas, tol = shifted_pow_pagerank(G, alphas, tol=1e-6)
     end2 = time.time()
     cpu_time = round(end2 - start2,1)
 
-    print("\nSHIFTED PAGERANK ALGORITHM\n")
+    print("\nSHIFTED PAGERANK ALGORITHM RESULTS:\n")
     print("\tCPU time (s):", cpu_time)
     print("\tMatrix-vector multiplications:", mv)
-    print("\tAlphas:", alphas)
+    print("\tAlphas(s):", alphas)
     print("\tTolerance:", tol)
 
     # df.loc[len(df)] = ["Shifted Power Method", alphas, cpu_time, mv, tol]
