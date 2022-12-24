@@ -8,7 +8,7 @@ This repository contains the code of my attempt to replicate the results obtaine
 pip install -r requirements.txt
 ```
 
-At the moment, the standard and shifted power method to compute the PageRank with multiple damping factors are fully implemented (as described in `[1]`). To run the program, go into the folder `src/` and execute the `./main.py` file. It takes as input two arguments:
+At the moment, the standard and shifted power method to compute the PageRank with multiple damping factors are fully implemented (as described in `[1]`). To run the program we need to execute the `main.py` file. It takes as input two arguments:
 
 - `--dataset`: the options are `BerkStan` and `Stanford`. This commands selects the web-graph to run the algorithms on. 
 - `--algo`: the options are `power`, `shifted`, `both`. If you choose the last option, it will first run the standard power method and then the shifted one. 
@@ -16,7 +16,6 @@ At the moment, the standard and shifted power method to compute the PageRank wit
 Here an example of what's described above.
 
 ```bash
-cd src
 sudo chmod +x main.py
 ```
 

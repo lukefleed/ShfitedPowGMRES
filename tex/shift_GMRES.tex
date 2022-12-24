@@ -35,6 +35,8 @@ The Restarted GMRES method (hereafter referred to as GMRES in short) is a non-sy
 
 \noindent Where $A \in \R^{n\times n}$ and $v_0 \in \R ^{n \times 1}$ is the initial vector. After $m$ iterations, the Arnoldi procedure produces the orthogonal basis $V_m = [v_1, \dots, v_m]$ and the upper Hessenberg matrix $H_m \in \R^{m\times m}$, and the residual vector $v_{m+1} \in \R^{n \times 1}$ and the residual norm $h_{m+1,m} \in \R$. Starting from $v_0 = b - Ax_0$ with an initial guess $x_0$, after running $m$ steps of the algorithm \ref{alg:arnoldi}, the \texttt{GMRES} method produces the approximate solution $\tilde x$ of the linear system $Ax = b$ that minimizes the residual norm $\lVert b - Ax \rVert$ in the Krylov subspace of dimension $m$. \vspace*{0.4cm}
 
+\paragraph{Implementation:} On the github res
+
 \noindent We know that the accuracy of the approximate solution $\tilde x$ of \texttt{GMRES} depends heavily on the dimension $m$ of the search space. The authors in \cite{SHEN2022126799} propose to use the \texttt{GMRES} method as a preconditioner for the shifted power method presented in the previous section. The core idea of the method is to run standard GMRES on a seed system and to approximate the other solutions as by products. The theoretical basis is the shift-invariance property of the Krylov subspace that enables us to use only one Krylov subspace for all the shifted systems, provided that the residual vectors are collinear to one other. The algorithm proposed by the authors is presented in Algorithm \ref{alg:shifted_GMRES}.
 
 \begin{algorithm}[H]

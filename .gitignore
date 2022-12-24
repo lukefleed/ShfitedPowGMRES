@@ -276,5 +276,4 @@ TSWLatexianTemp*
 *.lpz
 
 data/
-
 __pycache__/

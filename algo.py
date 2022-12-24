@@ -42,29 +42,28 @@ def load_data(dataset: Literal["Stanford", "NotreDame", "BerkStan"]) -> nx.Graph
     """
 
     # check if there is a data folder
-    if not exists(os.path.join(os.getcwd(), "data")):
-        os.mkdir(os.path.join(os.getcwd(), "data"))
-
+    if not exists(os.path.join("data")):
+        os.mkdir(os.path.join("data"))
     if dataset not in ["Stanford", "NotreDame", "BerkStan"]:
         raise ValueError("Invalid dataset. Please choose a valid dataset.")
 
     # Download the dataset
-    if not exists(f"../data/Web-{dataset}.txt.gz"):
+    if not exists(f"data/Web-{dataset}.txt.gz"):
         print(f"\nDownloading the dataset {dataset}...")
         wget.download(f"http://snap.stanford.edu/data/web-{dataset}.txt.gz", out=f"data/Web-{dataset}.txt.gz")
     else:
         print(f"\nThe dataset {dataset} is already downloaded.")
 
     # unzip the dataset
-    if not exists(f"../data/Web-{dataset}.txt"):
+    if not exists(f"data/Web-{dataset}.txt"):
         print(f"\nUnzipping the dataset {dataset}...")
-        with gzip.open(f"../data/Web-{dataset}.txt.gz", "rb") as f_in:
-            with open(f"../data/Web-{dataset}.txt", "wb") as f_out:
+        with gzip.open(f"data/Web-{dataset}.txt.gz", "rb") as f_in:
+            with open(f"data/Web-{dataset}.txt", "wb") as f_out:
                 f_out.write(f_in.read())
 
     # create the graph
     print(f"\nCreating the graph of the dataset {dataset}...\n")
-    G_dataset = nx.read_edgelist(f"../data/Web-{dataset}.txt", create_using=nx.DiGraph(), nodetype=int)
+    G_dataset = nx.read_edgelist(f"data/Web-{dataset}.txt", create_using=nx.DiGraph(), nodetype=int)
     print(f"\tNumber of nodes: {G_dataset.number_of_nodes()}")
     print(f"\tNumber of edges: {G_dataset.number_of_edges()}")
 
@@ -429,8 +428,6 @@ def pagerank(G, alpha=0.85, personalization=None, max_iter=10000, tol=1.0e-9, ns
     # this is a failure to converges
 
     raise nx.PowerIterationFailedConvergence(max_iter)
-
-    
 
 def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=1.0e-9):
 

@@ -41,7 +41,7 @@ def run_standard_pagerank(G, alphas):
 
 
 def run_shifted_powe(G, alphas):
-    print("\nStarting the shifted pagerank algorithm...\n")
+    print("\nStarting the SHIFTED PAGERANK ALGORITHM...\n")
 
     start2 = time.time()
     x, mv, alphas, tol = shifted_pow_pagerank(G, alphas, tol=1e-6)
