@@ -10,8 +10,6 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 from os.path import exists
-from scipy.sparse import *
-import plotly.graph_objs as go
 from typing import Literal
 
 def load_data(dataset: Literal["Stanford", "NotreDame", "BerkStan"]) -> nx.Graph:
@@ -19,15 +17,28 @@ def load_data(dataset: Literal["Stanford", "NotreDame", "BerkStan"]) -> nx.Graph
 
     Parameters
     ----------
-    dataset : Literal["Stanford", "BerkStan"]
+    dataset : Literal["Stanford", "BerkStan", "NotreDame"]
         The dataset to load.
 
     Returns
     -------
     nx.Graph
-        The graph of the dataset.
-        data/web-Stanford.txt
+        The graph of the dataset loaded.
 
+    Raises
+    ------
+    ValueError
+        If the dataset is not valid.
+
+    Notes
+    -----
+    The datasets are downloaded from the following link:
+
+    http://snap.stanford.edu/data/web-NotreDame.html
+    http://snap.stanford.edu/data/web-Stanford.html
+    http://snap.stanford.edu/data/web-BerkStan.html
+
+    If the dataset is already downloaded, it is not downloaded again.
     """
 
     # check if there is a data folder
@@ -61,8 +72,7 @@ def load_data(dataset: Literal["Stanford", "NotreDame", "BerkStan"]) -> nx.Graph
 
 def google_matrix(G, alpha=0.85, personalization=None, nodelist=None, weight="weight", dangling=None) -> np.matrix:
 
-
-    """Returns the Google matrix of the graph.
+    """Returns the Google matrix of the graph. NetworkX implementation.
 
     Parameters
     ----------
@@ -103,6 +113,8 @@ def google_matrix(G, alpha=0.85, personalization=None, nodelist=None, weight="we
 
     Notes
     -----
+    DO NOT USE THIS FUNCTION FOR LARGE GRAPHS.  It's memory intensive.
+
     The matrix returned represents the transition matrix that describes the
     Markov chain used in PageRank. For PageRank to converge to a unique
     solution (i.e., a unique stationary distribution in a Markov chain), the
@@ -147,33 +159,32 @@ def google_matrix(G, alpha=0.85, personalization=None, nodelist=None, weight="we
 
 def google_matrix_sparse(G, alpha=0.85, personalization=None, nodelist=None, weight="weight", dangling=None) -> np.matrix:
 
+  """ Revised NetworkX implementation for sparse matrices. Returns the Ptilde matrix of the graph instead of the Google matrix.
 
-  """Returns the Google matrix of the graph.
-
-  Parameters
-  ----------
-  G : graph
+    Parameters
+    ----------
+    G : graph
     A NetworkX graph.  Undirected graphs will be converted to a directed
     graph with two directed edges for each undirected edge.
 
-  alpha : float
+    alpha : float
     The damping factor.
 
-  personalization: dict, optional
+    personalization: dict, optional
     The "personalization vector" consisting of a dictionary with a
     key some subset of graph nodes and personalization value each of those.
     At least one personalization value must be non-zero.
     If not specfiied, a nodes personalization value will be zero.
     By default, a uniform distribution is used.
 
-  nodelist : list, optional
+    nodelist : list, optional
     The rows and columns are ordered according to the nodes in nodelist.
     If nodelist is None, then the ordering is produced by G.nodes().
 
-  weight : key, optional
+    weight : key, optional
     Edge data key to use as weight.  If None weights are set to 1.
 
-  dangling: dict, optional
+    dangling: dict, optional
     The outedges to be assigned to any "dangling" nodes, i.e., nodes without
     any outedges. The dict key is the node the outedge points to and the dict
     value is the weight of that outedge. By default, dangling nodes are given
@@ -182,19 +193,19 @@ def google_matrix_sparse(G, alpha=0.85, personalization=None, nodelist=None, wei
     matrix (see notes below). It may be common to have the dangling dict to
     be the same as the personalization dict.
 
-  Returns
-  -------
-  A : NumPy matrix
-      Google matrix of the graph
+    Returns
+    -------
+    A : NumPy matrix
+        Google matrix of the graph
 
-  Notes
-  -----
-  The matrix returned represents the transition matrix that describes the
-  Markov chain used in PageRank. For PageRank to converge to a unique
-  solution (i.e., a unique stationary distribution in a Markov chain), the
-  transition matrix must be irreducible. In other words, it must be that
-  there exists a path between every pair of nodes in the graph, or else there
-  is the potential of "rank sinks."
+    Notes
+    -----
+    This matrix i strictly speaking not the Google matrix, but the Ptilde matrix, described in the paper [1]
+
+
+    References
+    ----------
+    [1] Zhao-Li Shen, Meng Su, Bruno Carpentieri, and Chun Wen. Shifted power-gmres method accelerated by extrapolation for solving pagerank with multiple damping factors. Applied Mathematics and Computation, 420:126799, 2022
 
   """
   if nodelist is None:
@@ -243,7 +254,7 @@ def google_matrix_sparse(G, alpha=0.85, personalization=None, nodelist=None, wei
   return A, p
 
 def pagerank_numpy(G, alpha=0.85, personalization=None, weight="weight", dangling=None):
-    """Returns the PageRank of the nodes in the graph.
+    """Returns the PageRank of the nodes in the graph. NetworkX implementation.
 
     PageRank computes a ranking of the nodes in the graph G based on
     the structure of the incoming links. It was originally designed as
@@ -306,7 +317,7 @@ def pagerank_numpy(G, alpha=0.85, personalization=None, weight="weight", danglin
 def pagerank(G, alpha=0.85, personalization=None, max_iter=10000, tol=1.0e-9, nstart=None, weight="weight", dangling=None,):
 
     """
-    Returns the PageRank of the nodes in the graph.
+    Returns the PageRank of the nodes in the graph. Slighly modified NetworkX implementation.
 
         PageRank computes a ranking of the nodes in the graph G based on
         the structure of the incoming links. It was originally designed as
@@ -415,15 +426,16 @@ def pagerank(G, alpha=0.85, personalization=None, max_iter=10000, tol=1.0e-9, ns
         if err < N * tol: # if the error is small enough, stop iterating
             return dict(zip(nodelist, map(float, x))), iter, tol # return the current vector of PageRank values'
 
-    # other wise, return a Null dictionary, the number of iterations, and the tolerance
-    # this is a failure to convergeS
+    # this is a failure to converges
 
-    return {}, iter, tol
+    raise nx.PowerIterationFailedConvergence(max_iter)
+
+    
 
 def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=1.0e-9):
 
     """
-    Compute the PageRank of each node in the graph G.
+    Compute the PageRank of each node in the graph G. Algorithm 1 in the paper [1].
 
     Parameters
     ----------
@@ -441,8 +453,8 @@ def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=
 
     Returns
     -------
-    pagerank : dictionary
-        Dictionary of nodes with PageRank as value
+    pagerank : sparse matrix
+        Each column of the sparse matrix is a pagerank vector for a different alpha value.
 
     mv : integer
         The number of matrix-vector multiplications used in the power method
@@ -450,6 +462,15 @@ def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=
     Notes
     -----
     The eigenvector calculation uses power iteration with a SciPy sparse matrix representation. The shifted power method is described as Algorithm 1 in the paper located in the sources folders.
+
+    Raises
+    ------
+    PowerIterationFailedConvergence
+        If the algorithm fails to converge to the specified tolerance
+
+    References
+    ----------
+    [1] Zhao-Li Shen, Meng Su, Bruno Carpentieri, and Chun Wen. Shifted power-gmres method accelerated by extrapolation for solving pagerank with multiple damping factors. Applied Mathematics and Computation, 420:126799, 2022
 
     """
 
