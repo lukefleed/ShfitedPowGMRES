@@ -41,8 +41,7 @@
 
 % add counters
 
-\title{Shifted power-GMRES method accelerated by extrapolation
-for solving PageRank with multiple damping factors}
+\title{Shifted Power-GMRES method for solving PageRank with multiple damping factors}
 \author{Luca Lombardo}
 \date{}
 
@@ -50,10 +49,9 @@ for solving PageRank with multiple damping factors}
 \maketitle
 
 \begin{abstract}
-    \noindent In the years following its publication in 1998, the PageRank model has been studied deeply to be extended in fields such as chemistry, biology and social network analysis. The aim of this project is the implementation of a modified version of the Power method to solve the PageRank problem with multiple damping factors. The proposed method is based on the combination of the Power method with the shifted \texttt{GMRES} method.
-
-    %  During the years since it's first version, the PageRank model has been extended to many fields far beyond search engine rankings, such as chemistry, biology, bioinformatics, social network analysis, to name a few. Due to the large dimension of PageRank problems, in the past decade or so, considerable research efforts have been devoted to their efficient solution especially for the difficult cases where the damping factors are close to 1. However, there exists few research work concerning about the solution of the case where several PageRank problems with the same network structure and various damping factors need to be solved. In this paper, we generalize the Power method to solving the PageRank problem with multiple damping factors. We demonstrate that the solution has almost the equative cost of solving the most difficult PageRank system of the sequence, and the residual vectors of the PageRank systems after running this method are collinear. Based upon these results, we develop a more efficient method that combines this Power method with the shifted GMRES method. For further accelerating the solving phase, we present a seed system choosing strategy combined with an extrapolation technique, and analyze their effect. Numerical experiments demonstrate the potential of the proposed iterative solver for accelerating realistic PageRank computations with multiple damping factors.
+    \noindent In the years following its publication in 1998, the PageRank model has been studied deeply to be extended in fields such as chemistry, biology and social network analysis. The aim of this project is the implementation of a modified version of the Power method to solve the PageRank problem with multiple damping factors as proposed in \cite{SHEN2022126799}.
 \end{abstract}
+
 \tableofcontents
 \clearpage
 
