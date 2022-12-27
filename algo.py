@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-# Importing the libraries
 import os
 import wget
 import gzip
@@ -147,6 +144,8 @@ def google_matrix(G, alpha=0.85, personalization=None, nodelist=None, weight="we
         # Convert the dangling dictionary into an array in nodelist order
         dangling_weights = np.array([dangling.get(n, 0) for n in nodelist], dtype=float)
         dangling_weights /= dangling_weights.sum()
+
+    # Assign dangling weights to any dangling nodes (nodes with no out links)    
     dangling_nodes = np.where(A.sum(axis=1) == 0)[0]
 
     # Assign dangling_weights to any dangling nodes (nodes with no out links)
@@ -235,12 +234,7 @@ def google_matrix_sparse(G, alpha=0.85, personalization=None, nodelist=None, wei
       dangling_weights = np.array([dangling.get(n, 0) for n in nodelist], dtype=float)
       dangling_weights /= dangling_weights.sum()
 
-  # # Assign dangling_weights to any dangling nodes (nodes with no out links). 
-  # for i in range(N):
-  #   if A[[i],:].sum(axis=1) == 0:
-  #     A[[i],:] = dangling_weights
-
-  # replace rows with all zeros with dangling_weights
+  # Assign dangling_weights to any dangling nodes (nodes with no out links). 
   A[[A.sum(axis=1)==0],:] = dangling_weights
 
   # Normalize rows
@@ -426,7 +420,6 @@ def pagerank(G, alpha=0.85, personalization=None, max_iter=10000, tol=1.0e-9, ns
             return dict(zip(nodelist, map(float, x))), iter, tol # return the current vector of PageRank values'
 
     # this is a failure to converges
-
     raise nx.PowerIterationFailedConvergence(max_iter)
 
 def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=1.0e-9):
