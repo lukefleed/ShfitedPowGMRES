@@ -51,7 +51,7 @@ This function is strongly based on the \texttt{pagerank\_scipy} function of the 
 
 In the PageRank formulation involving multiple damping factors, the iterative solution of each $i$-th linear system is initialized with the initial guess $x_0^{(i)} = v$ and is terminated when the solution $x_k^{(i)}$ meets the following criteria:
 \begin{equation*}
-    \frac{\lVert (1 - \alpha_i)v - (I - \alpha_i \tilde P x_k^{(i)} \rVert_2}{\lVert x_k^{(i)} \rVert_2} < 10^{-6}
+    \frac{\lVert (1 - \alpha_i)v - (I - \alpha_i \tilde P x_k^{(i)}) \rVert_2}{\lVert x_k^{(i)} \rVert_2} < 10^{-6}
 \end{equation*}
 or the number of matrix-vector products exceeds $200$. \vspace*{0.5cm}
 
