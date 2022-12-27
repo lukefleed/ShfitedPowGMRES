@@ -66,6 +66,7 @@ def load_data(dataset: Literal["Stanford", "NotreDame", "BerkStan"]) -> nx.Graph
 
     return G_dataset
 
+
 def google_matrix(G, alpha=0.85, personalization=None, nodelist=None, weight="weight", dangling=None) -> np.matrix:
 
     """Returns the Google matrix of the graph. NetworkX implementation.
@@ -154,6 +155,7 @@ def google_matrix(G, alpha=0.85, personalization=None, nodelist=None, weight="we
     A /= A.sum(axis=1)[:, np.newaxis]  # Normalize rows to sum to 1
 
     return np.asmatrix(alpha * A + (1 - alpha) * p)
+
 
 def google_matrix_sparse(G, alpha=0.85, personalization=None, nodelist=None, weight="weight", dangling=None) -> np.matrix:
 
@@ -246,6 +248,7 @@ def google_matrix_sparse(G, alpha=0.85, personalization=None, nodelist=None, wei
 
   return A, p
 
+
 def pagerank_numpy(G, alpha=0.85, personalization=None, weight="weight", dangling=None):
     """Returns the PageRank of the nodes in the graph. NetworkX implementation.
 
@@ -306,6 +309,7 @@ def pagerank_numpy(G, alpha=0.85, personalization=None, weight="weight", danglin
     largest = np.array(eigenvectors[:, ind]).flatten().real
     norm = largest.sum()
     return dict(zip(G, map(float, largest / norm)))
+
 
 def pagerank(G, alpha=0.85, personalization=None, max_iter=10000, tol=1.0e-9, nstart=None, weight="weight", dangling=None,):
 
@@ -421,6 +425,7 @@ def pagerank(G, alpha=0.85, personalization=None, max_iter=10000, tol=1.0e-9, ns
 
     # this is a failure to converges
     raise nx.PowerIterationFailedConvergence(max_iter)
+
 
 def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=1.0e-9):
 

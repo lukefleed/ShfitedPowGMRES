@@ -16,12 +16,6 @@ At the moment, the standard and shifted power method to compute the PageRank wit
 Here an example of what's described above.
 
 ```bash
-sudo chmod +x main.py
-```
-
-Now we can run the program
-
-```bash
 ./main.py --dataset Stanford --algo both
 ```
 
