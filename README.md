@@ -1,4 +1,4 @@
-# ShfitedPowGMRES
+# Documentation
 
 > Report of the project: [view](https://github.com/lukefleed/ShfitedPowGMRES/blob/main/tex/main.pdf) / [download](https://github.com/lukefleed/ShfitedPowGMRES/raw/main/tex/main.pdf)
 
