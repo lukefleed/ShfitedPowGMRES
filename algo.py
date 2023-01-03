@@ -311,7 +311,7 @@ def pagerank_numpy(G, alpha=0.85, personalization=None, weight="weight", danglin
     return dict(zip(G, map(float, largest / norm)))
 
 
-def pagerank(G, alpha=0.85, personalization=None, max_iter=10000, tol=1.0e-9, nstart=None, weight="weight", dangling=None,):
+def pagerank(G, alpha=0.85, personalization=None, max_iter=1000, tol=1.0e-8, nstart=None, weight="weight", dangling=None,):
 
     """
     Returns the PageRank of the nodes in the graph. Slighly modified NetworkX implementation.
@@ -427,7 +427,7 @@ def pagerank(G, alpha=0.85, personalization=None, max_iter=10000, tol=1.0e-9, ns
     raise nx.PowerIterationFailedConvergence(max_iter)
 
 
-def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=1.0e-9):
+def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=1000, tol=1.0e-8):
 
     """
     Compute the PageRank of each node in the graph G. Algorithm 1 in the paper [1].
@@ -492,8 +492,9 @@ def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=
 
     for i in range(len(alphas)):
         r[:,[i]] = alphas[i] * mu # residual vector for the i-th alpha
-        # r_i = r[:,[i]].toarray()
-        res[i] = sp.sparse.linalg.norm(r[:,[i]]) # residual norm for the i-th alpha
+        r_i = r[:,[i]].toarray()
+        # res[i] = sp.sparse.linalg.norm(r[:,[i]]) # residual norm for the i-th alpha
+        res [i] = np.linalg.norm(r_i, ord = 2) # residual norm for the i-th alpha
         if res[i] >= tol:
             x[:, [i]] = r[:,[i]] + v # update the i-th column of x
             
@@ -503,18 +504,20 @@ def shifted_pow_pagerank(G, alphas=[0.85, 0.9, 0.95, 0.99], max_iter=10000, tol=
         err = np.max(res) 
         # print("Error: ", err)
         if err < tol:
-            print("Convergence reached with, ", mv, " matrix-vector multiplications")
+            # print("Convergence reached with, ", mv, " matrix-vector multiplications")
             return x, mv, alphas, tol
 
         # print("Iteration: ", _, "\r", end="")
 
         mu = A @ mu
         mv += 1
+        print("\nCurrent number of matrix-vector products: ", mv, "\r", end="")
         for i in range(len(alphas)):
             if res[i] >= tol:
                 r[:,[i]] = np.power(alphas[i], mv+1) * mu
-                # r_i = r[:,[i]].toarray()
-                res[i] = sp.sparse.linalg.norm(r[:,[i]])
+                r_i = r[:,[i]].toarray()
+                # res[i] = sp.sparse.linalg.norm(r[:,[i]])
+                res[i] = np.linalg.norm(r_i, ord = 2)
 
                 if res[i] >= tol:
                     x[:, [i]] = r[:,[i]] + v
