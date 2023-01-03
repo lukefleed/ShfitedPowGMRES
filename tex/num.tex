@@ -1,10 +1,9 @@
 
 \section{Numerical experiments}\label{sec:exp}
 
-% In this experiment, we test the performance of the shifted Power method against the conventional Power method for solving PageRank problems with multiple damping factors, namely $\{ \alpha_1 = 0.85, ~\alpha_2 = 0.86, ~...~ ,~ \alpha_{15} = 0.99 \}$ on the \texttt{web-stanford} and \texttt{web-BerkStan} datasets. The \texttt{web-stanford} dataset is a directed graph with $|V| = 281,903$ nodes and $|E| = 1,810,314$ edges, and the \texttt{web-BerkStan} dataset is a directed graph with $|V| = 1, 013, 320$ nodes and $|E| = 5, 308, 054$ edges. The datasets are available at \url{http://snap.stanford.edu/data/web-Stanford.html} and \url{http://snap.stanford.edu/data/web-BerkStan.html} respectively. The datasets are stored in the \texttt{.txt} edge-list format. The characteristics of the datasets are summarized in Table \ref{tab:datasets}.
+
 This experiment aims to compare the performance of the shifted Power method to the traditional Power method in solving PageRank problems involving multiple damping factors, specifically ${ \alpha_1 = 0.85, \alpha_2 = 0.86, ... , \alpha_{15} = 0.99 }$, on the \texttt{web-stanford} and \texttt{web-BerkStan} datasets. The \texttt{web-stanford} dataset consists of a directed graph with $|V| = 281,903$ nodes and $|E| = 1,810,314$ edges, while the \texttt{web-BerkStan} dataset is a directed graph with $|V| = 1, 013, 320$ nodes and $|E| = 5, 308, 054$ edges. These datasets can be found at \url{http://snap.stanford.edu/data/web-Stanford.html} and \url{http://snap.stanford.edu/data/web-BerkStan.html} respectively and are stored in the \texttt{.txt} edge-list format. A summary of the characteristics of the datasets is provided in Table \ref{tab:datasets}.
 
-% create a table with cols: Name, Number of Nodes, Number of edges, Density, Average Number of zeros (per row)
 \begin{table}[h]
 \centering
 \begin{tabular}{|c|c|c|c|}
@@ -43,7 +42,7 @@ This experiment aims to compare the performance of the shifted Power method to t
     \end{itemize}
 This function is strongly based on the \texttt{pagerank\_scipy} function of the networkx library.
 
-\paragraph{shifted\_pow\_pagerank}: This is the implementation of algorithm \ref{alg:algo1} with the modification of using the $l1$ norm instead of the $l2$ norm, which is not yet implemented for sparse matrices in SciPy. \vspace{0.5cm}
+\paragraph{shifted\_pow\_pagerank}: This is the implementation of algorithm \ref{alg:algo1} \vspace{0.5cm}
 
 \noindent There is also another function called \texttt{pagerank\_numpy} which utilizes NumPy's interface to the \texttt{LAPACK} eigenvalue solvers for the calculation of the eigenvector. This method is the fastest and most accurate for small graphs. However, the eigenvector calculation is not stable for large graphs, so the \texttt{pagerank\_numpy} function is not used in the experiments.
 
@@ -51,9 +50,9 @@ This function is strongly based on the \texttt{pagerank\_scipy} function of the 
 
 In the PageRank formulation involving multiple damping factors, the iterative solution of each $i$-th linear system is initialized with the initial guess $x_0^{(i)} = v$ and is terminated when the solution $x_k^{(i)}$ meets the following criteria:
 \begin{equation*}
-    \frac{\lVert (1 - \alpha_i)v - (I - \alpha_i \tilde P x_k^{(i)}) \rVert_2}{\lVert x_k^{(i)} \rVert_2} < 10^{-6}
+    \frac{\lVert (1 - \alpha_i)v - (I - \alpha_i \tilde P x_k^{(i)}) \rVert_2}{\lVert x_k^{(i)} \rVert_2} < 10^{-8}
 \end{equation*}
-or the number of matrix-vector products exceeds $200$. \vspace*{0.5cm}
+or the number of matrix-vector products exceeds $1000$. \vspace*{0.5cm}
 
 \noindent In this experiment, the performance of the shifted Power method is compared to that of the traditional Power method in solving PageRank problems with multiple damping factors.
 
@@ -63,20 +62,57 @@ or the number of matrix-vector products exceeds $200$. \vspace*{0.5cm}
 \begin{tabular}{|c|c|c|c|}
 \hline
 \textbf{Dataset} & \textbf{Method} & \textbf{CPU Time (s)} & \textbf{mv} \\ \hline
-\texttt{web-Stanford} & \texttt{Power} & $71.7$ & $70$  \\ \hline
-\texttt{web-Stanford} & \texttt{Shifted Power} & $665.4$ & $56$ \\ \hline
+\texttt{web-Stanford} & \texttt{Power} & $74.5$ & $738$  \\ \hline
+\texttt{web-Stanford} & \texttt{Shifted Power} & $2320.5$ & $276$ \\ \hline
 
 \hline
 
-\texttt{web-BerkStan} & \texttt{Power} & $202.1$ & $49$  \\ \hline
-\texttt{web-BerkStan} & \texttt{Shifted Power} & $1342.9$ & $73$ \\ \hline
+\texttt{web-BerkStan} & \texttt{Power} & $194.1$ & $555$  \\ \hline
+\texttt{web-BerkStan} & \texttt{Shifted Power} & $5740.7$ & $356$ \\ \hline
 \end{tabular}
 \caption{Summary of the experiments.}
 \label{tab:results}
 \end{table}
 
-% \noindent The results presented on table \ref{tab:results} are a bit in contrast compared to what the paper \cite{SHEN2022126799} reports. In their experiment the CPU time of the shifted power method is lower then the one of the standard power method. However, in our experiments the CPU time of the shifted power method is far higher then the one of the standard power method. Furthermore, theoretically, the number of matrix-vector products should be lower for the shifted power method, in particular it should be equal to the one of the standard PageRank algorithm with the biggest damping factor. However, in our experiments the number of matrix-vector products is higher for the shifted power method for the dataset \texttt{web-BerkStan} and lower for the dataset \texttt{web-Stanford}. \vspace*{0.5cm}
-\noindent The results presented in Table \ref{tab:results} differ somewhat from those reported in the study by Shen et al. \cite{SHEN2022126799}, where the CPU time of the shifted Power method was found to be lower than that of the standard Power method. In contrast, our experiments showed that the CPU time of the shifted Power method was significantly higher than that of the standard Power method. Additionally, it is theoretically expected that the number of matrix-vector products should be lower for the shifted Power method, specifically equal to that of the standard PageRank algorithm with the highest damping factor. However, our experiments found that the number of matrix-vector products was higher for the shifted Power method on the \texttt{web-BerkStan} dataset and lower on the \texttt{web-Stanford} dataset. \vspace*{0.5cm}
+\noindent The results presented in Table \ref{tab:results} differ somewhat from those reported in the study by Shen et al. \cite{SHEN2022126799}, where the CPU time of the shifted Power method was found to be lower than that of the standard Power method. In contrast, our experiments showed that the CPU time of the shifted Power method was significantly higher than that of the standard Power method. On the other hand, as predicted by theory, the number of matrix-vector products is lower for the shifted Power method. \vspace*{0.5cm}
 
-% \noindent The reasons to those differences in results may be a lot. I think that the most plausible reason is the difference in programming language and implementation, combined with a possibility of misunderstanding of the pseudo-code presented in \cite{SHEN2022126799}. My standard PageRank function is a slightly modified version of the network library function \texttt{pagerank\_scipy}, so I suppose that is better optimized in comparison to the shifted power method implementation that I wrote. Also, the network \texttt{Web-BerkStan} is very different from the \texttt{web-stanford} one. The adjacency matrix relative to the first one, has a lot of rows full of zeros in comparison to the second one ($4744$ vs $172$). This might effect negatively the shifted power method for this specific cases of networks with a lot of dangling nodes. \vspace*{0.5cm}
- \noindent There could be various reasons for the discrepancies in the results. One potential explanation is the difference in programming language and implementation, as well as the possibility of a misunderstanding of the pseudo-code provided in \cite{SHEN2022126799}. It is also possible that the standard PageRank function, which is a slightly modified version of the network library function \texttt{pagerank\_scipy}, is better optimized compared to the implementation of the shifted Power method written for this study. Additionally, the \texttt{Web-BerkStan} network is quite different from the \texttt{web-stanford} network, with the adjacency matrix for the former containing many rows with a large number of zeros compared to the latter ($4744$ vs $172$). This could potentially have a negative impact on the performance of the shifted Power method for networks with a significant number of dangling nodes.
+
+\noindent There could be various reasons for the discrepancies in the results. One potential explanation is the difference in programming language and implementation, as well as the possibility of a misunderstanding of the pseudo-code provided in \cite{SHEN2022126799}. It is also possible that the standard PageRank function, which is a slightly modified version of the network library function \texttt{pagerank\_scipy}, is better optimized compared to the implementation of the shifted Power method written for this study. Additionally, the \texttt{Web-BerkStan} network is quite different from the \texttt{web-stanford} network, with the adjacency matrix for the former containing many rows with a large number of zeros compared to the latter ($4744$ vs $172$). This could potentially have a negative impact on the performance of the shifted Power method for networks with a significant number of dangling nodes.
+
+\subsubsection{Matrix-vector products for the standard pagerank}
+
+In this study, we compared the number of matrix-vector products required to solve the PageRank problem using the shifted Power method and the standard Power method. Results showed that the number of matrix-vector products required for the shifted Power method was significantly lower than that of the standard Power method. Figure \ref{fig:mv} demonstrates that the number of matrix-vector products required for the standard power method increases exponentially as the value of $\alpha$ increases. The number of matrix-vector products required for the standard power method to converge for various values of $\alpha$ is presented in Table \ref{tab:mv}.
+
+\begin{figure}[h!]
+    \includegraphics[width=1\textwidth]{mv_alpha.png}
+    \caption{Number of matrix-vector products required for the standard Power method for different values of $\alpha$.}
+    \label{fig:mv}
+\end{figure}
+
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|cc|}
+        \hline
+        \textbf{} & \multicolumn{1}{c|}{\textbf{Web-Stanford}} & \textbf{Web-BerkStan} \\ \hline
+        $\alpha$  & \multicolumn{2}{c|}{\textit{matrix-vector products}}                                   \\ \hline
+        $0.85$         & \multicolumn{1}{c|}{19}                     & 15                     \\ \hline
+        $0.86$         & \multicolumn{1}{c|}{20}                     & 16                     \\ \hline
+        $0.87$         & \multicolumn{1}{c|}{21}                     & 17                     \\ \hline
+        $0.88$         & \multicolumn{1}{c|}{23}                     & 18                     \\ \hline
+        $0.89$         & \multicolumn{1}{c|}{24}                     & 19                     \\ \hline
+    $0.90$         & \multicolumn{1}{c|}{26}                     & 21                     \\ \hline
+    $0.91$         & \multicolumn{1}{c|}{29}                     & 22                     \\ \hline
+    $0.92$         & \multicolumn{1}{c|}{32}                     & 25                     \\ \hline
+    $0.93$         & \multicolumn{1}{c|}{35}                     & 27                     \\ \hline
+    $0.94$         & \multicolumn{1}{c|}{40}                     & 31                     \\ \hline
+    $0.95$         & \multicolumn{1}{c|}{47}                     & 36                     \\ \hline
+    $0.96$         & \multicolumn{1}{c|}{57}                     & 43                     \\ \hline
+    $0.97$         & \multicolumn{1}{c|}{73}                     & 54                     \\ \hline
+    $0.98$         & \multicolumn{1}{c|}{103}                    & 76                     \\ \hline
+    $0.99$         & \multicolumn{1}{c|}{189}                    & 135                    \\ \hline
+\end{tabular}
+\caption{Table of the results}
+\label{tab:mv}
+\end{table}
+
