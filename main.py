@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 
 from algo import *
 import warnings
@@ -15,8 +15,9 @@ def run_standard_pagerank(G, alphas):
 
     start1 = time.time()
     for alpha in alphas:
-        x, iter, tol = pagerank(G, alpha, tol=1e-6)
+        x, iter, tol = pagerank(G, alpha, tol=1e-8)
         iter_dict[alpha] = iter
+        print("The number of matrix-vector products for alpha =", alpha, "is:", iter)
         list_of_pageranks.append(x)
     end1 = time.time()
 
@@ -44,7 +45,7 @@ def run_shifted_powe(G, alphas):
     print("\nStarting the shifted power method... (this may take a while)")
 
     start2 = time.time()
-    x, mv, alphas, tol = shifted_pow_pagerank(G, alphas, tol=1e-6)
+    x, mv, alphas, tol = shifted_pow_pagerank(G, alphas, tol=1e-8)
     end2 = time.time()
     cpu_time = round(end2 - start2,1)
 
