@@ -8,7 +8,7 @@ The PageRank algorithm is a method developed by Google to determine the relevanc
 \begin{equation}\label{eq:transition}
     P(i,j) =
     \begin{cases}
-        \displaystyle \frac{1}{\sum_{k=1}^n G_{kj}} & \text{if } G_{i,j} = 0 \\
+        \displaystyle \frac{1}{\sum_{k=1}^n G_{kj}} & \text{if } G_{i,j} = 1 \\
         0 & \text{otherwise}
     \end{cases}
 \end{equation}
@@ -21,7 +21,7 @@ The PageRank algorithm is a method developed by Google to determine the relevanc
     A = \alpha \tilde P + (1 - \alpha)v e^T
 \end{equation}
 
-\noindent In \ref{eq:google} we have defined a new matrix called $\tilde P = P + vd^T$ where $d \in N^{n \times 1}$ is a binary vector tracing the indices of the damping web pages with no hyperlinks, i.e., $d(i) = 1$ if the \emph{i-th} page has no hyperlink, $v \in \R^{n \times n}$ is a probability vector, $e = [1, 1, ... ,1]^T$ and $0<\alpha<1$, the so-called damping factor that represents the probability in the model that the surfer transfer by clicking a hyperlink rather than other ways. Mathematically, the PageRank model can be formulated as the problem of finding the positive unit eigenvector $x$ (the so-called PageRank vector) such that
+\noindent In \ref{eq:google} we have defined a new matrix called $\tilde P = P + vd^T$ where $d \in N^{n \times 1}$ is a binary vector tracing the indices of the damping web pages with no hyperlinks, i.e., $d(i) = 1$ if the \emph{i-th} page has no hyperlink, $v \in \R^{n \times 1}$ is a probability vector, $e = [1, 1, ... ,1]^T$ and $0<\alpha<1$, the so-called damping factor that represents the probability in the model that the surfer transfer by clicking a hyperlink rather than other ways. Mathematically, the PageRank model can be formulated as the problem of finding the positive unit eigenvector $x$ (the so-called PageRank vector) such that
 \begin{equation}\label{eq:pr}
     Ax = x, \quad \lVert x \rVert = 1, \quad x > 0
 \end{equation}
@@ -58,4 +58,3 @@ The Power method is a popular algorithm for solving either the eigenvalue proble
 The convergence behavior is determined mainly by the ratio between the two largest eigenvalues of A. When $\alpha$ gets closer to $1$, though, the convergence can slow down significantly. \\
 
 \noindent As stated in \cite{SHEN2022126799} The number of iterations required to reduce the initial residual down to a tolerance $\tau$, measured as $\tau = \lVert Ax_k - x_k \rVert = \lVert x_{k+1} - x_k \rVert$ can be estimated as $\frac{\log_{10} \tau}{\log_{10} \alpha}$. The authors provide an example: when $\tau = 10^{-8}$ the Power method requires about 175 steps to converge for $\alpha = 0.9$ but the iteration count rapidly grows to 1833 for $\alpha = 0.99$. Therefore, for values of the damping parameter very close to 1 more robust alternatives to the simple Power algorithm should be used.
-

@@ -4,10 +4,18 @@
 This section presents the adaptations of stationary iterative methods for solving PageRank problems with multiple damping factors, as described in \cite{SHEN2022126799}. The goal is to determine if there are implementations of these methods that have a computational cost similar to that of solving a standard PageRank problem with a single damping factor when applied to the problem with multiple damping factors. In other words, we want to know if these methods are efficient for solving PageRank problems with multiple damping factors.
 
 \subsection{The implementation of the shifted power method}
-% Inspired by the reason why shifted Krylov subspaces can save computational cost, the authors of \cite{SHEN2022126799} investigate whether there are duplications in the calculations of multiple linear systems in this problem class by the stationary iterative methods, so that the duplications in the computation can be deleted and used for all systems. It's some sort of dynamic programming approach. Firstly, they analyze the Power method applied to the sequence of linear systems in \ref{eq:pr2}. It computes at the \emph{k-th} iteration approximate solutions $x_k^{(i)} (1 \leq i \leq s)$ of the form
-The authors of \cite{SHEN2022126799} were motivated by the idea that shifted Krylov subspaces can save computational cost by reducing duplications in the calculations of multiple linear systems. They therefore sought to determine if there were similar opportunities for optimization in the case of stationary iterative methods applied to the PageRank problem with multiple damping factors. To do this, they used a dynamic programming approach, in which they analyzed the Power method applied to the sequence of linear systems in equation \ref{eq:pr2}. This method computes approximate solutions $x_k^{(i)} (1 \leq i \leq s)$ at the $k^{th}$ iteration of the form:
+
+The authors of \cite{SHEN2022126799} were motivated by the idea that shifted Krylov subspaces can save computational cost by reducing duplications in the calculations of multiple linear systems. They therefore sought to determine if there were similar opportunities for optimization in the case of stationary iterative methods applied to the PageRank problem with multiple damping factors. To do this, they used a dynamic programming approach, in which they analyzed the Power method applied to the sequence of linear systems in equation \ref{eq:pr2}. This standard method computes approximate solutions $x_k^{(i)} (1 \leq i \leq s)$ at the $k^{th}$ iteration of the form:
 \begin{equation}
-    x_k^{(i)} = \alpha_i^k \tilde P^k x_k^{(i)} + (1 - \alpha_i^k) \sum_{j=0}^{k-1} \alpha_i^j \tilde P^j v
+    x_k^{(i)} = \alpha_i \tilde P x_{k-1} + (1 - \alpha_i)v
+\end{equation}
+after $k$ iterations of the Power Method, we obtain
+\begin{equation}
+    x_k^{(i)} = \alpha_i^k \tilde P^k x_0^{(i)} + (1 - \alpha_i^k) \sum_{j=0}^{k-1} \alpha_i^j \tilde P^j v
+\end{equation}
+Using the same initial\footnote{Note that, the option to choose any the same initial guess $x_0$ for the $s$ systems is acceptable since the Power method converges for every positive initial probability vector \cite{SHEN2022126799}} approximation $x_0^{(i)}$ for all the $s$ systems, we can write
+\begin{equation}\label{eq:pw-it}
+    x_k^{(i)} = \alpha_i^k \tilde P^k x_0 + (1 - \alpha_i^k) \sum_{j=0}^{k-1} \alpha_i^j \tilde P^j v
 \end{equation}
 If the $s$ systems in \ref{eq:pr2} are solved synchronously, this means that all the $x^{(i)}_k$ are computed only after all previous approximations $x^{(j)}_{k-1}$ are available. We can now rearrange the computation efficiently as reported in \cite{SHEN2022126799}:
 \begin{itemize}
@@ -23,7 +31,11 @@ If the $s$ systems in \ref{eq:pr2} are solved synchronously, this means that all
             \item compute and store $x_k^{(i)} = \alpha_i \mu_1 + x_k^{(i)} + (1-\alpha_i)\alpha^{k-1}_i \mu_2$.
         \end{itemize}
 \end{itemize}
-This implementation requires at most $2$ matrix-vector products at each step, which is a significant gain compared to the $s$ matrix-vector products required by the standard Power method to compute $x^{(i)}_{k+1}$ , especially when $s \gg 2$. \vspace{0.4cm}
+This implementation requires at most $2$ matrix-vector products at each step, which is a significant gain compared to the $s$ matrix-vector products required by the standard Power method to compute $x^{(i)}_{k+1}$ , especially when $s \gg 2$. In particular, it can be found that if $x_0 = v$ then the vector $ \tilde P^{k-1} v = \tilde P^{k-1} x_0$ is available from the $(k-1)-th$ iteration. Accordingly, all the approximations $x_k^{(i)}$ have the same computational cost, i.e $1$ matrix-vector product, of solving one linear system in \ref{eq:pr2}. The Power Iteration formulae \ref{eq:pw-it} can be rewritten as
+\begin{equation}
+    x_{(i)}^{k} = \alpha_i^k \tilde P^k v + (1 - \alpha_i^k) \sum_{j=0}^{k-1} \alpha_i^j \tilde P^j v =
+\end{equation}
+$$ =\sum _{j=1}^k \alpha_i^j \tilde P^{j-1} (\tilde P v - v) + v $$
 
 \noindent This was of course still a theoretical explanation. An efficient implementation can be written to compute and store $\mu = \tilde Pv -v$ at the first iteration and then store
 $$\mu = \tilde P^{k-1}(\tilde P v - v) = \tilde P \cdot (\tilde P^{k-2}(\tilde P v - v))$$
@@ -34,7 +46,7 @@ at each \emph{k-th} iteration ($k  > 1$), and then from each approximate solutio
 Since in general each of the $s$ linear systems may require a different number of Power iterations to converge, the $s$ residual norms have to be monitored separately to test the convergence. \vspace{0.4cm}
 
 \noindent Now we can summarize the efficient implementation of the Power method presented in this section for solving problem \ref{eq:pr2} in Algorithm \ref{alg:algo1}, as reported in \cite{SHEN2022126799}. From now on, we'll refer to this implementation as the \emph{Shifted-Power method}.
-
+\clearpage
 \begin{algorithm}\label{alg:algo1}
     \caption{Shifted-Power method for PageRank with multiple damping factors}\label{alg:algo1}
     \begin{algorithmic}
@@ -50,7 +62,7 @@ Since in general each of the $s$ linear systems may require a different number o
             \EndIf
         \EndFor
 
-        \While {$\max(Res \geq \tau)$ and $ mv \leq \max_{mv}$}
+        \While {$\max(Res) \geq \tau$ and $ mv \leq \max_{mv}$}
             \State compute $\mu = \tilde P \mu$
             \State $mv = mv + 1$
             \For {$i = 1:s$}
@@ -66,7 +78,7 @@ Since in general each of the $s$ linear systems may require a different number o
     \end{algorithmic}
 \end{algorithm}
 
-% \noindent Where $mv$ is an integer that counts the number of matrix-vector products performed by the algorithm. The algorithm stops when either all the residual norms are smaller than the tolerance $\tau$ or the maximum number of matrix-vector products is reached. An implementation of this algorithm written in Python is available in the github repository  of this project.
-\noindent The algorithm stops when either all the residual norms (a measure of how close the current estimate is to the true solution) are smaller than a specified tolerance $\tau$, or when the maximum number of matrix-vector products (multiplication of a matrix by a vector) has been reached. The integer $mv$ counts the number of matrix-vector products performed by the algorithm. An implementation of this algorithm, written in Python, is available in the corresponding github repository for the project. 
+
+\noindent The algorithm stops when either all the residual norms (a measure of how close the current estimate is to the true solution) are smaller than a specified tolerance $\tau$, or when the maximum number of matrix-vector products (multiplication of a matrix by a vector) has been reached. The integer $mv$ counts the number of matrix-vector products performed by the algorithm. An implementation of this algorithm, written in Python, is available in the corresponding github repository for the project.
 
 \clearpage
